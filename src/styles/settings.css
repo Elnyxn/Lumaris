@@ -152,14 +152,25 @@
   color: var(--text-tertiary);
 }
 
-/* 关于 / GitHub */
+/* 关于 / GitHub：左链接，右检查更新 */
+.about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 0;
+}
+
 .about-github {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 40px;
-  padding: 6px 0;
+  margin: 0;
+  padding: 4px 6px 4px 2px;
   border: none;
   background: transparent;
   color: var(--text-primary);
@@ -200,17 +211,16 @@
   text-overflow: ellipsis;
 }
 
-.about-update-row {
+.about-row__actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 4px 0 8px;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .about-update-status {
-  flex: 1;
   min-width: 0;
+  padding: 0 2px 8px;
   font-size: 11px;
   color: var(--text-tertiary);
   line-height: 1.35;

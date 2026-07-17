@@ -119,7 +119,7 @@ export class SettingsView {
     this.fillMonitors();
     this.fillUi(cfg);
     this.fillAdvanced(cfg);
-    this.fillAbout(st.version);
+    this.fillAbout();
   }
 
   private fillGeneral(cfg: NonNullable<ReturnType<typeof getState>["config"]>): void {
@@ -439,10 +439,13 @@ export class SettingsView {
     el.appendChild(open);
   }
 
-  private fillAbout(version: string): void {
+  private fillAbout(): void {
     const el = this.root.querySelector('[data-sec="about"]') as HTMLElement;
 
-    // GitHub 图标 + 地址（整行可点）
+    // 一行：左 GitHub（可点打开），右「检查更新」
+    const row = document.createElement("div");
+    row.className = "about-row";
+
     const gh = document.createElement("button");
     gh.type = "button";
     gh.className = "about-github";
@@ -459,14 +462,9 @@ export class SettingsView {
         this.handlers.onToast?.(e instanceof Error ? e.message : String(e));
       });
     });
-    el.appendChild(gh);
 
-    // 检查更新
-    const row = document.createElement("div");
-    row.className = "about-update-row";
-    const status = document.createElement("div");
-    status.className = "about-update-status";
-    status.textContent = t("settings.version", { v: version });
+    const actions = document.createElement("div");
+    actions.className = "about-row__actions";
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "text-btn";
@@ -476,6 +474,18 @@ export class SettingsView {
     openRel.className = "text-btn";
     openRel.textContent = t("about.openRelease");
     openRel.hidden = true;
+    actions.appendChild(btn);
+    actions.appendChild(openRel);
+
+    row.appendChild(gh);
+    row.appendChild(actions);
+    el.appendChild(row);
+
+    // 状态单独一行（检查后才显示）
+    const status = document.createElement("div");
+    status.className = "about-update-status";
+    status.hidden = true;
+    el.appendChild(status);
 
     let releaseUrl = "https://github.com/Elnyxn/Lumaris/releases";
     openRel.addEventListener("click", () => {
@@ -486,6 +496,7 @@ export class SettingsView {
 
     btn.addEventListener("click", async () => {
       btn.disabled = true;
+      status.hidden = false;
       status.className = "about-update-status";
       status.textContent = t("about.checking");
       openRel.hidden = true;
@@ -516,11 +527,6 @@ export class SettingsView {
         btn.disabled = false;
       }
     });
-
-    row.appendChild(status);
-    row.appendChild(btn);
-    row.appendChild(openRel);
-    el.appendChild(row);
   }
 
   destroyRecorders(): void {

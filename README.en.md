@@ -48,15 +48,20 @@
 ## Screenshots
 
 <p align="center">
-  <img src="docs/assets/screenshot-dual.png" width="420" alt="Multi-monitor flyout" /><br/>
-  <em>Multi-monitor brightness flyout (stacked)</em>
+  <img src="docs/assets/screenshot-dual.png" width="440" alt="Multi-monitor brightness flyout" /><br/>
+  <em>Multi-monitor brightness flyout</em>
 </p>
 
 <p align="center">
-  <img src="docs/assets/screenshot-flyout.png" width="360" alt="Single display flyout" />
+  <img src="docs/assets/screenshot-flyout.png" width="340" alt="Single display brightness and contrast" />
   &nbsp;
+  <img src="docs/assets/screenshot-light.png" width="340" alt="Light theme" /><br/>
+  <em>Single display · brightness + contrast · light theme</em>
+</p>
+
+<p align="center">
   <img src="docs/assets/screenshot-settings.png" width="360" alt="Settings" /><br/>
-  <em>Single display · Settings</em>
+  <em>Settings</em>
 </p>
 
 ---

@@ -48,15 +48,20 @@
 ## 界面预览
 
 <p align="center">
-  <img src="docs/assets/screenshot-dual.png" width="420" alt="多显示器浮窗" /><br/>
-  <em>多显示器亮度浮窗（上下堆叠）</em>
+  <img src="docs/assets/screenshot-dual.png" width="440" alt="多显示器亮度浮窗" /><br/>
+  <em>多显示器亮度浮窗</em>
 </p>
 
 <p align="center">
-  <img src="docs/assets/screenshot-flyout.png" width="360" alt="单屏浮窗" />
+  <img src="docs/assets/screenshot-flyout.png" width="340" alt="单屏亮度与对比度" />
   &nbsp;
-  <img src="docs/assets/screenshot-settings.png" width="360" alt="设置页" /><br/>
-  <em>单屏调节 · 设置中心</em>
+  <img src="docs/assets/screenshot-light.png" width="340" alt="浅色模式" /><br/>
+  <em>单屏 · 亮度 + 对比度 · 浅色模式</em>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshot-settings.png" width="360" alt="设置页面" /><br/>
+  <em>设置页面</em>
 </p>
 
 ---
