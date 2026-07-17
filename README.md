@@ -174,7 +174,7 @@ cd src-tauri && cargo build --release --target x86_64-pc-windows-gnu
 - [x] 多显示器堆叠 UI  
 - [x] 深色 / 浅色 · 中英 i18n  
 - [x] 托盘滚轮 · 快捷键加速度  
-- [ ] 应用内 GitHub 更新检测  
+- [x] 应用内 GitHub 更新检测  
 - [ ] 对比度等更多 VCP（按显示器能力）  
 - [ ] 签名安装包 / 自动更新通道  
 

@@ -174,7 +174,7 @@ Uninstall keeps user config by default so preferences survive reinstalls.
 - [x] Multi-monitor stacked UI  
 - [x] Dark / light · zh-CN / EN  
 - [x] Tray scroll · hotkey acceleration  
-- [ ] In-app GitHub update check  
+- [x] In-app GitHub update check  
 - [ ] More VCP features where supported  
 - [ ] Signed installer / update channel  
 
