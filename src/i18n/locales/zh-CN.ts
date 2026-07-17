@@ -91,6 +91,15 @@ export const zhCN = {
   // advanced
   "advanced.logLevel": "日志级别",
   "advanced.openLogs": "打开日志目录",
+  "about.title": "关于",
+  "about.github": "GitHub",
+  "about.openRepo": "打开项目主页",
+  "about.checkUpdate": "检查更新",
+  "about.checking": "正在检查…",
+  "about.upToDate": "已是最新版本 {v}",
+  "about.updateAvailable": "发现新版本 {latest}（当前 {current}）",
+  "about.openRelease": "打开发布页",
+  "about.checkFailed": "检查失败：{err}",
 
   // toasts
   "toast.resetDone": "已重置设置",

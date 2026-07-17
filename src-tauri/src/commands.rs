@@ -683,6 +683,35 @@ pub fn report_ui_error(message: String, code: Option<String>) {
     tracing::warn!(message = %message, code = ?code, "前端错误");
 }
 
+#[tauri::command]
+pub fn open_external_url(url: String) -> Result<(), String> {
+    crate::update::open_external_url(&url)
+}
+
+#[tauri::command]
+pub fn check_for_updates(force: Option<bool>) -> Result<crate::update::UpdateCheckResult, String> {
+    Ok(crate::update::check_for_updates(force.unwrap_or(false)))
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectLinks {
+    pub github_url: String,
+    pub releases_url: String,
+    pub owner: String,
+    pub repo: String,
+}
+
+#[tauri::command]
+pub fn get_project_links() -> ProjectLinks {
+    ProjectLinks {
+        github_url: crate::update::GITHUB_URL.into(),
+        releases_url: crate::update::GITHUB_RELEASES_URL.into(),
+        owner: crate::update::GITHUB_OWNER.into(),
+        repo: crate::update::GITHUB_REPO.into(),
+    }
+}
+
 /// 点击外部关闭：由前端在 blur 时调用；Rust 也可挂全局
 #[tauri::command]
 pub fn ping() -> &'static str {

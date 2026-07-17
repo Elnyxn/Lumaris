@@ -79,6 +79,9 @@ pub fn run() {
             commands::open_logs_dir,
             commands::reset_settings,
             commands::report_ui_error,
+            commands::open_external_url,
+            commands::check_for_updates,
+            commands::get_project_links,
             commands::ping,
         ])
         .setup(move |app| {

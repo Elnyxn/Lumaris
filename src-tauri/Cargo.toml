@@ -36,6 +36,8 @@ dirs = "6"
 sha2 = "0.10"
 hex = "0.4"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+# GitHub 更新检测（轻量阻塞 HTTP）
+ureq = { version = "2.12", default-features = false, features = ["tls", "json"] }
 
 [target.'cfg(windows)'.dependencies]
 # 笔记本内屏背光：WMI (root\wmi / WmiMonitorBrightness*)

@@ -151,3 +151,79 @@
   font-size: 11px;
   color: var(--text-tertiary);
 }
+
+/* 关于 / GitHub */
+.about-github {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+}
+
+.about-github:hover {
+  background: var(--control-hover);
+}
+
+.about-github__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+.about-github__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-github__label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.about-github__url {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.about-update-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 0 8px;
+}
+
+.about-update-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+.about-update-status.is-ok {
+  color: var(--success);
+}
+
+.about-update-status.is-new {
+  color: var(--warning);
+}
+
+.about-update-status.is-err {
+  color: var(--danger);
+}

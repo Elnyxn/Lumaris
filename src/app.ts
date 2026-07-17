@@ -181,6 +181,7 @@ export class App {
           showToast(e instanceof Error ? e.message : String(e));
         }
       },
+      onToast: (message) => showToast(message),
       onResetAll: async () => {
         const cfg = await cmd.resetSettings();
         const autostartEnabled = await cmd.getAutostart();

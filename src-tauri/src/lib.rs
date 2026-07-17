@@ -13,6 +13,7 @@ pub mod settings;
 pub mod startup;
 pub mod state;
 pub mod tray;
+pub mod update;
 pub mod utils;
 pub mod window;
 

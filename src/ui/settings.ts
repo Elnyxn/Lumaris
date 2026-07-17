@@ -10,9 +10,13 @@ import {
   type TargetMode,
 } from "../state/types";
 import { shortId } from "../utils/formatting";
+import * as cmd from "../ipc/commands";
 import { HotkeyRecorder } from "./hotkey-recorder";
-import { iconBack } from "./icons";
+import { iconBack, iconGithub } from "./icons";
 import { FluentSelect } from "./select";
+
+const GITHUB_URL = "https://github.com/Elnyxn/Lumaris";
+const GITHUB_DISPLAY = "github.com/Elnyxn/Lumaris";
 
 export interface SettingsHandlers {
   onBack: () => void;
@@ -26,6 +30,7 @@ export interface SettingsHandlers {
   onResetAll: () => Promise<void>;
   onRefresh: () => Promise<void>;
   onRecordingChange: (recording: boolean) => void;
+  onToast?: (message: string) => void;
 }
 
 export class SettingsView {
@@ -90,6 +95,10 @@ export class SettingsView {
           <div class="settings__section-title">${escapeHtml(t("settings.advanced"))}</div>
           <div class="settings__card" data-sec="advanced"></div>
         </section>
+        <section class="settings__section">
+          <div class="settings__section-title">${escapeHtml(t("about.title"))}</div>
+          <div class="settings__card" data-sec="about"></div>
+        </section>
       </div>
       <div class="settings__footer">
         <span class="settings__version">${escapeHtml(t("settings.version", { v: st.version }))}</span>
@@ -110,6 +119,7 @@ export class SettingsView {
     this.fillMonitors();
     this.fillUi(cfg);
     this.fillAdvanced(cfg);
+    this.fillAbout(st.version);
   }
 
   private fillGeneral(cfg: NonNullable<ReturnType<typeof getState>["config"]>): void {
@@ -427,6 +437,90 @@ export class SettingsView {
       .querySelector("button")!
       .addEventListener("click", () => void this.handlers.onOpenLogs());
     el.appendChild(open);
+  }
+
+  private fillAbout(version: string): void {
+    const el = this.root.querySelector('[data-sec="about"]') as HTMLElement;
+
+    // GitHub 图标 + 地址（整行可点）
+    const gh = document.createElement("button");
+    gh.type = "button";
+    gh.className = "about-github";
+    gh.setAttribute("aria-label", t("about.openRepo"));
+    gh.innerHTML = `
+      <span class="about-github__icon" aria-hidden="true">${iconGithub}</span>
+      <span class="about-github__meta">
+        <span class="about-github__label">${escapeHtml(t("about.github"))}</span>
+        <span class="about-github__url">${escapeHtml(GITHUB_DISPLAY)}</span>
+      </span>
+    `;
+    gh.addEventListener("click", () => {
+      void cmd.openExternalUrl(GITHUB_URL).catch((e) => {
+        this.handlers.onToast?.(e instanceof Error ? e.message : String(e));
+      });
+    });
+    el.appendChild(gh);
+
+    // 检查更新
+    const row = document.createElement("div");
+    row.className = "about-update-row";
+    const status = document.createElement("div");
+    status.className = "about-update-status";
+    status.textContent = t("settings.version", { v: version });
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "text-btn";
+    btn.textContent = t("about.checkUpdate");
+    const openRel = document.createElement("button");
+    openRel.type = "button";
+    openRel.className = "text-btn";
+    openRel.textContent = t("about.openRelease");
+    openRel.hidden = true;
+
+    let releaseUrl = "https://github.com/Elnyxn/Lumaris/releases";
+    openRel.addEventListener("click", () => {
+      void cmd.openExternalUrl(releaseUrl).catch((e) => {
+        this.handlers.onToast?.(e instanceof Error ? e.message : String(e));
+      });
+    });
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      status.className = "about-update-status";
+      status.textContent = t("about.checking");
+      openRel.hidden = true;
+      try {
+        const r = await cmd.checkForUpdates(true);
+        releaseUrl = r.releaseUrl || releaseUrl;
+        if (r.error && !r.updateAvailable) {
+          status.className = "about-update-status is-err";
+          status.textContent = t("about.checkFailed", { err: r.error });
+          openRel.hidden = false;
+        } else if (r.updateAvailable) {
+          status.className = "about-update-status is-new";
+          status.textContent = t("about.updateAvailable", {
+            latest: r.latestVersion,
+            current: r.currentVersion,
+          });
+          openRel.hidden = false;
+        } else {
+          status.className = "about-update-status is-ok";
+          status.textContent = t("about.upToDate", { v: r.currentVersion });
+        }
+      } catch (e) {
+        status.className = "about-update-status is-err";
+        status.textContent = t("about.checkFailed", {
+          err: e instanceof Error ? e.message : String(e),
+        });
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    row.appendChild(status);
+    row.appendChild(btn);
+    row.appendChild(openRel);
+    el.appendChild(row);
   }
 
   destroyRecorders(): void {

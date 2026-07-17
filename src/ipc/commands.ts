@@ -140,3 +140,34 @@ export async function reportUiError(
 ): Promise<void> {
   await invoke("report_ui_error", { message, code: code ?? null });
 }
+
+export interface ProjectLinks {
+  githubUrl: string;
+  releasesUrl: string;
+  owner: string;
+  repo: string;
+}
+
+export interface UpdateCheckResult {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseUrl: string;
+  htmlUrl: string;
+  body: string | null;
+  error: string | null;
+}
+
+export async function getProjectLinks(): Promise<ProjectLinks> {
+  return invoke<ProjectLinks>("get_project_links");
+}
+
+export async function openExternalUrl(url: string): Promise<void> {
+  await invoke("open_external_url", { url });
+}
+
+export async function checkForUpdates(
+  force = false,
+): Promise<UpdateCheckResult> {
+  return invoke<UpdateCheckResult>("check_for_updates", { force });
+}

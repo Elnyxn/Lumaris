@@ -85,6 +85,15 @@ export const en: Messages = {
 
   "advanced.logLevel": "Log level",
   "advanced.openLogs": "Open logs folder",
+  "about.title": "About",
+  "about.github": "GitHub",
+  "about.openRepo": "Open project page",
+  "about.checkUpdate": "Check for updates",
+  "about.checking": "Checking…",
+  "about.upToDate": "You're up to date ({v})",
+  "about.updateAvailable": "Update available: {latest} (current {current})",
+  "about.openRelease": "Open release page",
+  "about.checkFailed": "Check failed: {err}",
 
   "toast.resetDone": "Settings reset",
 
