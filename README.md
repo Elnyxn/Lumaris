@@ -1,147 +1,147 @@
 <p align="center">
-  <img src="docs/assets/logo.png" width="120" height="120" alt="Lumaris logo" />
+  <img src="docs/assets/logo.png" width="120" height="120" alt="Lumaris 图标" />
 </p>
 
 <h1 align="center">Lumaris</h1>
 
 <p align="center">
-  <strong>Luma × Polaris</strong> — Professional display brightness control for Windows<br/>
-  Fluent UI · Tray-resident · External DDC/CI · Laptop WMI backlight · Multi-monitor
+  <strong>Luma × Polaris</strong> — 为 Windows 打造的专业显示器亮度控制<br/>
+  Fluent 视觉 · 托盘常驻 · 外接屏 DDC/CI · 笔记本 WMI 背光 · 多显示器
 </p>
 
 <p align="center">
-  <a href="README.zh-CN.md"><strong>简体中文</strong></a>
+  <strong>简体中文</strong>
   ·
-  <strong>English</strong>
+  <a href="README.en.md"><strong>English</strong></a>
 </p>
 
 <p align="center">
-  <a href="#download"><img src="https://img.shields.io/badge/Download-Setup%20%7C%20Portable-0A84FF?style=for-the-badge" alt="Download" /></a>
+  <a href="#下载"><img src="https://img.shields.io/badge/下载-安装包%20%7C%20便携版-0A84FF?style=for-the-badge" alt="下载" /></a>
   <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://img.shields.io/github/v/release/Elnyxn/Lumaris?style=for-the-badge&color=6E56CF" alt="Release" /></a>
-  <a href="#license"><img src="https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge" alt="License" /></a>
-  <a href="#platform"><img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="#许可"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-F59E0B?style=for-the-badge" alt="License" /></a>
+  <a href="#平台"><img src="https://img.shields.io/badge/平台-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Tauri-2-FFC131?logo=tauri&logoColor=black" alt="Tauri" />
   <img src="https://img.shields.io/badge/Rust-stable-DEA584?logo=rust&logoColor=black" alt="Rust" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/i18n-zh--CN%20%7C%20EN-8B5CF6" alt="i18n" />
+  <img src="https://img.shields.io/badge/i18n-简中%20%7C%20English-8B5CF6" alt="i18n" />
 </p>
 
 ---
 
-## Highlights
+## 产品亮点
 
-| | Feature | Description |
+| | 能力 | 说明 |
 |:---:|:---|:---|
-| 🔆 | **Precise brightness** | External displays via DDC/CI (VCP 0x10) / standard brightness API; laptop panels via WMI/ACPI backlight |
-| 🖥️ | **Multi-monitor** | Vertical stack layout; sync / independent / fixed targets |
-| ⌨️ | **Global hotkeys** | Fully customizable; hold-to-accelerate curve; tap uses configured step |
-| 🖱️ | **Tray scroll** | Hover the tray icon and scroll to adjust — no window required |
-| 🎨 | **Fluent UI** | Dark / light themes aligned with Windows 11 flyouts |
-| 🌐 | **Bilingual** | Full zh-CN / English UI and tray strings |
-| ⚡ | **Lightweight** | Single-instance tray app, low footprint, optional autostart |
+| 🔆 | **精准亮度** | 外接屏 DDC/CI（VCP 0x10）+ 标准亮度 API；笔记本内屏 WMI/ACPI 背光 |
+| 🖥️ | **多显示器** | 上下堆叠一览调节；支持同步 / 独立目标 / 固定目标 |
+| ⌨️ | **全局快捷键** | 可自定义组合键；长按加速度曲线，短按按设置步长 |
+| 🖱️ | **托盘滚轮** | 悬停托盘图标滚轮即可调亮度，无需打开主界面 |
+| 🎨 | **Fluent UI** | 深色 / 浅色主题，贴近 Windows 11 系统浮层体验 |
+| 🌐 | **中英双语** | 界面与托盘文案完整 i18n |
+| ⚡ | **轻量常驻** | 单实例托盘应用，低资源占用，开机自启可选 |
 
 ---
 
-## Screenshots
+## 界面预览
 
 <p align="center">
-  <img src="docs/assets/screenshot-dual.png" width="420" alt="Multi-monitor flyout" /><br/>
-  <em>Multi-monitor brightness flyout (stacked)</em>
+  <img src="docs/assets/screenshot-dual.png" width="420" alt="多显示器浮窗" /><br/>
+  <em>多显示器亮度浮窗（上下堆叠）</em>
 </p>
 
 <p align="center">
-  <img src="docs/assets/screenshot-flyout.png" width="360" alt="Single display flyout" />
+  <img src="docs/assets/screenshot-flyout.png" width="360" alt="单屏浮窗" />
   &nbsp;
-  <img src="docs/assets/screenshot-settings.png" width="360" alt="Settings" /><br/>
-  <em>Single display · Settings</em>
+  <img src="docs/assets/screenshot-settings.png" width="360" alt="设置页" /><br/>
+  <em>单屏调节 · 设置中心</em>
 </p>
 
 ---
 
-## Download
+## 下载
 
-Get the latest build from [**GitHub Releases**](https://github.com/Elnyxn/Lumaris/releases):
+从 [**GitHub Releases**](https://github.com/Elnyxn/Lumaris/releases) 获取最新版本：
 
-| Package | File | Best for |
+| 包类型 | 文件 | 适用场景 |
 |:---|:---|:---|
-| **Installer** | `Lumaris-Setup-x.y.z.exe` | Start Menu, uninstaller, optional autostart |
-| **Portable** | `Lumaris-portable-x.y.z.zip` | Unzip and run |
+| **安装包** | `Lumaris-Setup-x.y.z.exe` | 推荐：开始菜单、卸载、可选开机自启 |
+| **便携版** | `Lumaris-portable-x.y.z.zip` | 解压即用，不写安装目录 |
 
-> Requires **Microsoft Edge WebView2 Runtime** (preinstalled on most Windows 10/11 PCs).
+> 需要 **Microsoft Edge WebView2 Runtime**（Windows 10/11 多数机器已预装）。
 
-Checksums ship as `SHA256SUMS.txt` on the release page.
+发布页附带 `SHA256SUMS.txt`，下载后建议核对哈希。
 
 ---
 
-## Getting started
+## 快速开始
 
-1. Install the Setup package or extract the portable zip  
-2. Find the **Lumaris** tray icon  
-3. **Click** the tray icon to open the flyout; **hover + scroll** to change brightness  
-4. Open settings (gear) for hotkeys, theme, language, monitor aliases  
+1. 安装 Setup 或解压 Portable  
+2. 托盘区出现 **Lumaris** 图标  
+3. **单击托盘** 打开亮度浮窗；**悬停滚轮** 直接调亮度  
+4. 齿轮进入设置：快捷键、主题、语言、显示器别名等  
 
-### Default hotkeys (editable)
+### 默认快捷键（可改）
 
-| Action | Default |
+| 动作 | 默认 |
 |:---|:---|
-| Increase brightness | `Ctrl + Alt + ↑` |
-| Decrease brightness | `Ctrl + Alt + ↓` |
-| Toggle flyout | `Ctrl + Alt + B` |
-| Previous / next display | `Ctrl + Alt + ← / →` |
+| 提高亮度 | `Ctrl + Alt + ↑` |
+| 降低亮度 | `Ctrl + Alt + ↓` |
+| 显示/隐藏浮窗 | `Ctrl + Alt + B` |
+| 上一台 / 下一台 | `Ctrl + Alt + ← / →` |
 
 ---
 
-## How it works
+## 工作原理
 
 ```text
-┌──────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│ Flyout / keys│ ──► │ Target resolve   │ ──► │ DDC worker      │
-│ Tray scroll  │     │ Optimistic UI    │     │ Serialized I/O  │
-└──────────────┘     └──────────────────┘     └────────┬────────┘
-                                                       │
-                     ┌──────────────────┐              │
-                     │ External DDC/CI  │ ◄────────────┤
-                     │ Laptop WMI BL    │ ◄────────────┘
-                     └──────────────────┘
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│ 浮窗 / 快捷键 │ ──► │ 目标解析与缓存    │ ──► │ 后台 DDC Worker │
+│ 托盘滚轮     │     │ 乐观 UI 更新     │     │ 串行写硬件       │
+└─────────────┘     └──────────────────┘     └────────┬────────┘
+                                                      │
+                    ┌──────────────────┐              │
+                    │ 外接屏 DDC/CI     │ ◄────────────┤
+                    │ 笔记本 WMI 背光   │ ◄────────────┘
+                    └──────────────────┘
 ```
 
-- **External monitors**: `SetMonitorBrightness` / VCP `0x10`  
-- **Laptop panel**: `root\wmi` → `WmiMonitorBrightness` / `WmiSetBrightness`, matched by hardware InstanceName so “Second screen only” does not mis-bind externals  
+- **外接显示器**：优先 `SetMonitorBrightness` / VCP `0x10`  
+- **笔记本内屏**：`root\wmi` → `WmiMonitorBrightness` / `WmiSetBrightness`，并按硬件 InstanceName 匹配，避免「仅第二屏幕」时误绑外接屏  
 
 ---
 
-## Tech stack
+## 技术栈
 
-| Layer | Stack |
+| 层 | 技术 |
 |:---|:---|
-| Shell | [Tauri 2](https://tauri.app/) |
-| OS / hardware | Rust · windows-rs · Win32 Monitor Configuration API · WMI |
-| UI | TypeScript · Vite · native HTML/CSS (no heavy SPA framework) |
-| Runtime | Single WebView2 instance |
+| 应用壳 | [Tauri 2](https://tauri.app/) |
+| 系统与硬件 | Rust · windows-rs · Win32 Monitor Configuration API · WMI |
+| 界面 | TypeScript · Vite · 原生 HTML/CSS（无重型前端框架） |
+| 运行时 | 单实例 WebView2 |
 
 ---
 
-## Build from source
+## 从源码构建
 
-### Requirements
+### 环境
 
 - Windows 10 **1809+** / Windows 11  
 - [Rust](https://rustup.rs/) 1.77+  
 - [Node.js](https://nodejs.org/) 20+  
-- Visual C++ Build Tools + Windows SDK (for MSVC packages)  
-- Or WSL + `x86_64-pc-windows-gnu` cross-compile (see `docs/BUILD.md`)
+- Visual C++ Build Tools + Windows SDK（MSVC 本机包）  
+- 或 WSL + `x86_64-pc-windows-gnu` 交叉编译（见 `docs/BUILD.md`）
 
-### Develop
+### 开发
 
 ```bash
 npm install
 npm run tauri:dev
 ```
 
-### Release artifacts
+### 发布产物
 
 ```bash
 npm run build
@@ -152,37 +152,37 @@ cd src-tauri && cargo build --release --target x86_64-pc-windows-gnu
 #   .\scripts\package-portable.ps1 -MakeInstaller
 ```
 
-More: [`docs/BUILD.md`](docs/BUILD.md) · [`docs/RELEASE.md`](docs/RELEASE.md) · [`docs/DDC.md`](docs/DDC.md)
+更多说明：[`docs/BUILD.md`](docs/BUILD.md) · [`docs/RELEASE.md`](docs/RELEASE.md) · [`docs/DDC.md`](docs/DDC.md)
 
 ---
 
-## Config & data
+## 配置与数据
 
-| Path | Content |
+| 路径 | 内容 |
 |:---|:---|
-| `%LOCALAPPDATA%\Lumaris\config.json` | Settings, hotkeys, theme, language |
-| `%LOCALAPPDATA%\Lumaris\logs\` | Rotating logs (latest 14 files) |
+| `%LOCALAPPDATA%\Lumaris\config.json` | 设置、快捷键、主题、语言 |
+| `%LOCALAPPDATA%\Lumaris\logs\` | 滚动日志（保留最近 14 个文件） |
 
-Uninstall keeps user config by default so preferences survive reinstalls.
-
----
-
-## Roadmap
-
-- [x] DDC/CI external brightness  
-- [x] Laptop WMI backlight  
-- [x] Multi-monitor stacked UI  
-- [x] Dark / light · zh-CN / EN  
-- [x] Tray scroll · hotkey acceleration  
-- [ ] In-app GitHub update check  
-- [ ] More VCP features where supported  
-- [ ] Signed installer / update channel  
+卸载安装包**默认保留**用户配置，便于重装后恢复偏好。
 
 ---
 
-## Contributing
+## 路线图
 
-Issues and PRs welcome. Before submitting:
+- [x] DDC/CI 外接屏亮度  
+- [x] 笔记本 WMI 背光  
+- [x] 多显示器堆叠 UI  
+- [x] 深色 / 浅色 · 中英 i18n  
+- [x] 托盘滚轮 · 快捷键加速度  
+- [ ] 应用内 GitHub 更新检测  
+- [ ] 对比度等更多 VCP（按显示器能力）  
+- [ ] 签名安装包 / 自动更新通道  
+
+---
+
+## 贡献
+
+欢迎 Issue / PR。提交前建议：
 
 ```bash
 npm run typecheck
@@ -192,16 +192,23 @@ cargo check --target x86_64-pc-windows-gnu
 
 ---
 
-## License
+## 许可
 
-[MIT](LICENSE) © Elnyxn / Lumaris contributors
+[**PolyForm Noncommercial 1.0.0**](LICENSE) © Elnyxn / Lumaris contributors
+
+- ✅ 允许个人学习、研究、业余项目等**非商业**用途  
+- ✅ 允许查看源码、修改（在许可证条款内）  
+- ❌ **禁止商业使用**（含收费产品、SaaS、公司内部盈利性部署等，详见 LICENSE）  
+- 说明：这不是 OSI 定义的 “Open Source”，而是 **Source Available（源码可见）**
+
+如需商业授权，请联系仓库维护者。
 
 ---
 
 <p align="center">
   <img src="docs/assets/logo-128.png" width="48" height="48" alt="Lumaris" /><br/>
-  <sub>Lumaris — system-grade brightness control for Windows</sub><br/>
+  <sub>Lumaris — 把亮度控制做回系统级体验</sub><br/>
   <a href="https://github.com/Elnyxn/Lumaris">github.com/Elnyxn/Lumaris</a>
   ·
-  <a href="README.zh-CN.md">简体中文</a>
+  <a href="README.en.md">English</a>
 </p>

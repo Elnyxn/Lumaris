@@ -5,7 +5,7 @@ description = "Lumaris — Windows external display brightness control with Flue
 authors = ["Lumaris"]
 edition = "2021"
 rust-version = "1.77"
-license = "MIT"
+license = "PolyForm-Noncommercial-1.0.0"
 repository = "https://github.com/Elnyxn/Lumaris"
 default-run = "lumaris"
 
