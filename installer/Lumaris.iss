@@ -7,7 +7,9 @@
 ; ISCC "installer\Lumaris.iss"
 
 #define MyAppName "Lumaris"
-#define MyAppVersion "1.0.0"
+#ifndef MyAppVersion
+  #define MyAppVersion "1.0.0"
+#endif
 #define MyAppPublisher "Lumaris"
 #define MyAppURL "https://github.com/Elnyxn/Lumaris"
 #define MyAppExeName "Lumaris.exe"

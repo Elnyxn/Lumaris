@@ -82,14 +82,22 @@ Write-Host "便携包: $zip"
 
 if ($MakeInstaller) {
   $iscc = @(
+    (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"),
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
     "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
-  ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+  ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
   if (-not $iscc) {
     Write-Warning "未找到 Inno Setup 6 (ISCC.exe)。请安装后重试 -MakeInstaller"
   } else {
-    & $iscc (Join-Path $Root "installer\Lumaris.iss")
+    & $iscc "/DMyAppVersion=$Version" (Join-Path $Root "installer\Lumaris.iss")
+    if ($LASTEXITCODE -ne 0) { throw "ISCC 失败: $LASTEXITCODE" }
+    $outDir = Join-Path $Root "installer\output"
+    $setup = Get-ChildItem $outDir -Filter "Lumaris-Setup-*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($setup) {
+      New-Item -ItemType Directory -Force -Path (Join-Path $Root "release") | Out-Null
+      Copy-Item -Force $setup.FullName (Join-Path $Root "release\$($setup.Name)")
+    }
     Write-Host "安装包输出: installer\output\"
   }
 }

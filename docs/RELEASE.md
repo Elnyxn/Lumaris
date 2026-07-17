@@ -8,7 +8,29 @@
 | 安装程序 | `Lumaris-Setup-x.y.z.exe`（Inno） | 向导安装、快捷方式、卸载 |
 | Tauri NSIS/MSI | `src-tauri/target/.../bundle/` | 在 **Windows 本机** 用 `tauri build` |
 
-纯拷贝 `exe` 可以跑，但不像正式软件。推荐至少做 **zip 便携包** 或 **Setup.exe**。
+### 自动发布（推荐）
+
+仓库已配置 GitHub Actions：`.github/workflows/release.yml`。
+
+1. 对齐版本号（三处必须一致）：
+   - `package.json` → `version`
+   - `src-tauri/tauri.conf.json` → `version`
+   - `src-tauri/Cargo.toml` → `version`
+2. 提交并推送后打 tag：
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+3. Actions 在 `windows-latest` 上自动：
+   - `npm ci` + 前端 build + `cargo build --release`
+   - 打包 Portable zip
+   - 安装 Inno Setup 并生成 Setup.exe
+   - 写入 `SHA256SUMS.txt`
+   - 创建/更新 GitHub Release，并挂上上述资产
+
+应用内「检查更新」读取的即该 Release 的 latest tag。
 
 ---
 
