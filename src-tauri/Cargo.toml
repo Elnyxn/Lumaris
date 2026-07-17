@@ -1,0 +1,80 @@
+[package]
+name = "lumaris"
+version = "1.0.0"
+description = "Lumaris — Windows external display brightness control with Fluent/Acrylic UI"
+authors = ["Lumaris"]
+edition = "2021"
+rust-version = "1.77"
+license = "MIT"
+repository = "https://github.com/Elnyxn/Lumaris"
+default-run = "lumaris"
+
+[lib]
+name = "lumaris_lib"
+# 桌面端 rlib 即可；cdylib 在 windows-gnu 交叉链接会触发 “export ordinal too large”
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# custom-protocol：生产嵌入 frontendDist；未启用时会走 devUrl(localhost)
+tauri = { version = "2", features = ["tray-icon", "image-png", "custom-protocol"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2"
+parking_lot = "0.12"
+once_cell = "1"
+dirs = "6"
+sha2 = "0.10"
+hex = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[target.'cfg(windows)'.dependencies]
+# 笔记本内屏背光：WMI (root\wmi / WmiMonitorBrightness*)
+wmi = "0.14"
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Graphics_Dwm",
+  "Win32_Devices_Display",
+  "Win32_System_Power",
+  "Win32_System_Registry",
+  "Win32_System_SystemInformation",
+  "Win32_System_LibraryLoader",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_UI_HiDpi",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_Storage_FileSystem",
+] }
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_Graphics_Gdi",
+] }
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
+[profile.dev]
+opt-level = 0

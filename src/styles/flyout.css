@@ -1,0 +1,181 @@
+.flyout {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px 8px;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+  /* 内容贴顶排布，不把底栏顶到窗口最底留空洞 */
+  justify-content: flex-start;
+}
+
+.flyout__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 26px;
+  flex-shrink: 0;
+}
+
+.flyout__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flyout__name {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-font-smoothing: antialiased;
+}
+
+.flyout__status {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 11px;
+  color: var(--text-secondary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.flyout__status.is-error {
+  color: var(--danger);
+}
+
+.flyout__status.is-warn {
+  color: var(--warning);
+}
+
+.flyout__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.flyout__slider-slot {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.flyout__value {
+  width: 44px;
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+/* 底栏：分割线下方垂直居中，紧贴内容不留大块空白 */
+.flyout__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.flyout__footer-label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  padding: 0 6px 0 2px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.flyout__footer .icon-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+/* 多显示器上下堆叠 */
+.flyout-list-host,
+.flyout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+
+.flyout-row {
+  display: grid;
+  grid-template-columns: 18px 1fr 44px;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.flyout-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.flyout-row__icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--text-secondary);
+}
+
+.flyout-row__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flyout-row__value {
+  font-size: 12px;
+  text-align: right;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.flyout-row__slider {
+  grid-column: 2 / span 2;
+}

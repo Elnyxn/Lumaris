@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build
+dist/
+src-tauri/target/
+*.exe
+!installer/payload/.gitkeep
+
+# Local / runtime
+.github-account
+*.log
+.DS_Store
+Thumbs.db
+
+# Release binaries (publish via GitHub Releases)
+release/*.exe
+release/*.zip
+release/portable/
+release/SHA256SUMS.txt
+installer/output/
+installer/payload/*
+!installer/payload/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env / secrets
+.env
+.env.*
+*.token
+
+# WSL / tooling
+.cargo-lock
+
+# Root runtime copies
+/WebView2Loader.dll
+/Lumaris.exe

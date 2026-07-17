@@ -1,0 +1,26 @@
+{
+  "name": "lumaris",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Windows 外接显示器亮度控制工具 — Fluent/Acrylic 风格",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "package:portable": "bash scripts/package-portable.sh",
+    "release:notes": "echo See docs/RELEASE.md"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.5.0"
+  }
+}

@@ -1,0 +1,126 @@
+/*
+  系统 Flyout：整窗同色、无入场位移，杜绝闪动/乱跳
+*/
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--panel-bg-solid) !important;
+  color: var(--text-primary);
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg-solid);
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+#app.ready {
+  opacity: 1;
+}
+
+.panel {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+  background: var(--panel-bg-solid);
+  border: none;
+  box-shadow: none;
+  opacity: var(--opacity-panel);
+  overflow: hidden;
+  pointer-events: auto;
+  transform: none !important;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--panel-sheen);
+  z-index: 0;
+}
+
+.panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--panel-inset);
+  z-index: 0;
+}
+
+.panel > * {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.panel.fallback-blur,
+.panel.fallback-solid {
+  background: var(--panel-bg-solid);
+  backdrop-filter: none;
+}
+
+/* 窗口显隐：无动画，避免闪动 */
+.panel.anim-show,
+.panel.anim-hide {
+  animation: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* 设置 ↔ 浮窗 页面切换（仅内容区，窗口本身不挪） */
+.panel.page-from-settings > .flyout {
+  animation: page-back-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.panel.page-to-settings > .settings {
+  animation: page-forward-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes page-back-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes page-forward-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel.page-from-settings > .flyout,
+  .panel.page-to-settings > .settings {
+    animation: none;
+  }
+}

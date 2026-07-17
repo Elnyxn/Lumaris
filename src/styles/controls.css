@@ -1,0 +1,400 @@
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition: background var(--animation-fast) var(--ease-out),
+    transform var(--animation-fast) var(--ease-out);
+}
+
+.icon-btn:hover {
+  background: var(--control-hover);
+}
+
+.icon-btn:active {
+  background: var(--control-active);
+  transform: scale(0.96);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.icon-btn .fi {
+  font-family: var(--font-icon);
+  font-size: 16px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: normal;
+}
+
+/* 内联 SVG 图标 */
+.icon-svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-svg.fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* 自定义滑块 */
+.slider {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 80px;
+  width: 100%;
+  height: 32px;
+  display: block;
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+}
+
+.slider__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  background: var(--slider-track);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.slider__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--slider-fill);
+  border-radius: 2px;
+  /* 跟手：禁止过渡，否则一卡一卡 */
+  transition: none !important;
+  will-change: width;
+}
+
+.slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  box-shadow: 0 0 0 1px var(--slider-thumb-edge), 0 1px 4px rgba(0, 0, 0, 0.22);
+  /* 位置瞬移；仅 hover 缩放可过渡 */
+  transition: transform 80ms var(--ease-out);
+  pointer-events: none;
+  z-index: 1;
+  will-change: left;
+}
+
+.slider:hover .slider__thumb {
+  transform: scale(1.08);
+}
+
+.slider.is-dragging .slider__thumb {
+  transform: scale(0.94);
+}
+
+.slider:focus-visible .slider__thumb {
+  box-shadow: 0 0 0 2px var(--control-focus), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.slider.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* 开关 */
+.switch {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--switch-off);
+  transition: background var(--animation-fast);
+  flex-shrink: 0;
+}
+
+.switch[aria-checked="true"] {
+  background: var(--switch-on);
+}
+
+.switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--switch-knob);
+  transition: transform var(--animation-fast) var(--ease-out);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.switch[aria-checked="true"] .switch__knob {
+  transform: translateX(20px);
+}
+
+/* 分段 */
+.seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--control-surface);
+  gap: 2px;
+}
+
+.seg__btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.seg__btn[aria-pressed="true"] {
+  background: var(--control-surface-strong);
+  color: var(--text-primary);
+}
+
+.seg__btn:hover {
+  background: var(--control-hover);
+}
+
+/* 文本按钮 */
+.text-btn {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.text-btn:hover {
+  background: var(--control-hover);
+  color: var(--text-primary);
+}
+
+.text-btn.danger:hover {
+  color: var(--danger);
+}
+
+/* 字段 */
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 8px 0;
+}
+
+.field > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.field__label {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.field__hint {
+  margin-top: 2px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-font-smoothing: antialiased;
+}
+
+.field .select,
+.field .input {
+  flex-shrink: 0;
+}
+
+.field__control {
+  flex-shrink: 0;
+}
+
+.input {
+  background: var(--control-surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  min-width: 120px;
+  max-width: 180px;
+}
+
+.input:focus-visible {
+  border-color: var(--control-focus);
+}
+
+/* 原生 select 仅作兜底；设置页用 .fselect */
+.select {
+  appearance: none;
+  background: var(--control-surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 6px 28px 6px 10px;
+  color: var(--text-primary);
+  min-width: 120px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.select option {
+  background: var(--panel-bg-solid);
+  color: var(--text-primary);
+}
+
+/* —— Fluent 自定义下拉 —— */
+.fselect {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  min-width: 120px;
+  vertical-align: middle;
+}
+
+.fselect__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  margin: 0;
+  padding: 5px 10px 5px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--control-surface);
+  color: var(--text-primary);
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 12px;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background 100ms ease, border-color 100ms ease;
+}
+
+.fselect__btn:hover {
+  background: var(--control-hover);
+  border-color: var(--panel-border);
+}
+
+.fselect.is-open .fselect__btn {
+  background: var(--control-hover);
+  border-color: var(--control-focus);
+}
+
+.fselect__text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fselect__chev {
+  flex-shrink: 0;
+  display: inline-flex;
+  opacity: 0.7;
+  transition: transform 120ms ease;
+}
+
+.fselect.is-open .fselect__chev {
+  transform: rotate(180deg);
+  opacity: 0.9;
+}
+
+.fselect__menu {
+  /* fixed 由 JS 定位，避免被设置页 overflow 裁切 */
+  position: fixed;
+  z-index: 200;
+  max-height: 200px;
+  overflow: auto;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-bg-solid);
+  box-shadow: var(--shadow);
+  scrollbar-width: none;
+}
+
+.fselect__menu::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.fselect__item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition: background 80ms ease;
+}
+
+.fselect__item:hover {
+  background: var(--control-hover);
+}
+
+.fselect__item.is-selected {
+  background: var(--control-active);
+  color: var(--text-primary);
+}
+
+.fselect__item.is-selected:hover {
+  background: var(--control-active);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(20, 18, 17, 0.88);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
+  font-size: 12px;
+  max-width: 90%;
+  z-index: 50;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+}
