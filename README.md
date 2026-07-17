@@ -18,6 +18,7 @@
 <p align="center">
   <a href="#下载"><img src="https://img.shields.io/badge/下载-安装包%20%7C%20便携版-0A84FF?style=for-the-badge" alt="下载" /></a>
   <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://img.shields.io/github/v/release/Elnyxn/Lumaris?style=for-the-badge&color=6E56CF" alt="Release" /></a>
+  <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://img.shields.io/github/downloads/Elnyxn/Lumaris/total?style=for-the-badge&label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&color=10B981" alt="累计下载" /></a>
   <a href="#许可"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-F59E0B?style=for-the-badge" alt="License" /></a>
   <a href="#平台"><img src="https://img.shields.io/badge/平台-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
 </p>
