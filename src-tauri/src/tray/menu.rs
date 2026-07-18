@@ -91,9 +91,10 @@ pub fn setup_tray(app: &AppHandle<Wry>) -> tauri::Result<()> {
                 } => {
                     toggle_flyout_from_tray(app);
                 }
-                // 悬停期间滚轮可调亮度（见 tray::wheel）
-                TrayIconEvent::Enter { .. } | TrayIconEvent::Move { .. } => {
-                    crate::tray::tray_wheel::set_tray_hover(true);
+                // 悬停期间滚轮可调亮度：同步图标物理矩形，供 WH_MOUSE_LL 点落检测
+                // （远程桌面常丢 Leave，不能只靠 sticky bool）
+                TrayIconEvent::Enter { rect, .. } | TrayIconEvent::Move { rect, .. } => {
+                    crate::tray::tray_wheel::update_icon_rect_from_tauri(&rect);
                 }
                 TrayIconEvent::Leave { .. } => {
                     crate::tray::tray_wheel::set_tray_hover(false);

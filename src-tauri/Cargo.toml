@@ -1,6 +1,6 @@
 [package]
 name = "lumaris"
-version = "1.0.1"
+version = "1.0.2"
 description = "Lumaris — Windows external display brightness control with Fluent/Acrylic UI"
 authors = ["Lumaris"]
 edition = "2021"

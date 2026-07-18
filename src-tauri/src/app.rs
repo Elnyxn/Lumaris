@@ -761,6 +761,10 @@ fn handle_tray_wheel(app: &tauri::AppHandle, notches: i32) {
     if notches == 0 {
         return;
     }
+    // 二次校验：钩子线程已点落检测，这里再确认 hover/矩形未过期
+    if !crate::tray::tray_wheel::is_tray_hover() {
+        return;
+    }
     // 每格 2 个百分点，手感细腻且不跟设置步长死绑
     let points = notches.clamp(-4, 4) * 2;
     let action = if points > 0 { "increase" } else { "decrease" };

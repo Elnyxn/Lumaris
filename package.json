@@ -1,6 +1,6 @@
 {
   "name": "lumaris",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Windows 外接显示器亮度控制工具 — Fluent/Acrylic 风格",
   "type": "module",
