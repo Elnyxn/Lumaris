@@ -16,11 +16,11 @@
 </p>
 
 <p align="center">
-  <a href="#download"><img src="https://img.shields.io/badge/Download-Setup%20%7C%20Portable-0A84FF?style=for-the-badge" alt="Download" /></a>
+  <a href="#download"><img src="https://img.shields.io/badge/Download-Setup%20%7C%20Portable-0A84FF" alt="Download" /></a>
   <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://badgen.net/github/tag/Elnyxn/Lumaris?color=6e56cf&label=Release" alt="Release" /></a>
   <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://badgen.net/github/assets-dl/Elnyxn/Lumaris?color=10b981&label=Downloads" alt="Total downloads" /></a>
-  <a href="#license"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-F59E0B?style=for-the-badge" alt="License" /></a>
-  <a href="#platform"><img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="#license"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-F59E0B" alt="License" /></a>
+  <a href="#platform"><img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
 </p>
 
 <p align="center">

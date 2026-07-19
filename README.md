@@ -16,11 +16,11 @@
 </p>
 
 <p align="center">
-  <a href="#下载"><img src="https://img.shields.io/badge/下载-安装包%20%7C%20便携版-0A84FF?style=for-the-badge" alt="下载" /></a>
+  <a href="#下载"><img src="https://img.shields.io/badge/下载-安装包%20%7C%20便携版-0A84FF" alt="下载" /></a>
   <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://badgen.net/github/tag/Elnyxn/Lumaris?color=6e56cf&label=Release" alt="Release" /></a>
   <a href="https://github.com/Elnyxn/Lumaris/releases"><img src="https://badgen.net/github/assets-dl/Elnyxn/Lumaris?color=10b981&label=%E4%B8%8B%E8%BD%BD" alt="累计下载" /></a>
-  <a href="#许可"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-F59E0B?style=for-the-badge" alt="License" /></a>
-  <a href="#平台"><img src="https://img.shields.io/badge/平台-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="#许可"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-F59E0B" alt="License" /></a>
+  <a href="#平台"><img src="https://img.shields.io/badge/平台-Windows%2010%2F11-0078D4?logo=windows&logoColor=white" alt="Windows" /></a>
 </p>
 
 <p align="center">
