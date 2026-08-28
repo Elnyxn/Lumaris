@@ -61,6 +61,7 @@ pub fn run() {
             commands::refresh_monitors,
             commands::set_brightness,
             commands::set_contrast,
+            commands::set_sdr_brightness,
             commands::adjust_brightness,
             commands::select_monitor,
             commands::select_next_monitor,
@@ -293,6 +294,7 @@ pub fn run() {
                         // 始终主屏
                         let mons = st.monitors.list();
                         let mon_count = mons.len();
+                        let sdr_count = mons.iter().filter(|m| m.sdr_controllable).count();
                         let (work, dpi) = mons
                             .into_iter()
                             .find(|m| m.is_primary)
@@ -312,6 +314,7 @@ pub fn run() {
                             dpi,
                             show_c,
                             mon_count,
+                            sdr_count,
                         );
                         let _ = win.set_ignore_cursor_events(false);
                         let _ = win.show();
@@ -399,6 +402,7 @@ fn handle_worker_event(app: &tauri::AppHandle, ev: WorkerEvent) {
                                 )
                             });
                         let mon_count = list.len();
+                        let sdr_count = list.iter().filter(|m| m.sdr_controllable).count();
                         let show_c = state.config.read().show_contrast && mon_count <= 1;
                         let page = state.current_page();
                         let _ = crate::window::position_flyout(
@@ -408,6 +412,7 @@ fn handle_worker_event(app: &tauri::AppHandle, ev: WorkerEvent) {
                             dpi,
                             show_c,
                             mon_count,
+                            sdr_count,
                         );
                     }
                 }

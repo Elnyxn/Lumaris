@@ -9,6 +9,7 @@ import {
   subscribe,
   updateMonitorBrightness,
   updateMonitorContrast,
+  updateMonitorSdrBrightness,
 } from "./state/store";
 import type { PageId } from "./state/types";
 import { FlyoutView } from "./ui/flyout";
@@ -83,6 +84,15 @@ export class App {
       onContrast: (id, value, finalWrite) => {
         updateMonitorContrast(id, value, true);
         void cmd.setContrast(id, value, finalWrite);
+        if (finalWrite) this.resetHideTimer();
+        else this.clearHideTimer();
+      },
+      onSdrBrightness: (id, value, finalWrite) => {
+        updateMonitorSdrBrightness(id, value, true);
+        void cmd.setSdrBrightness(id, value, finalWrite).catch((e) => {
+          showToast(e instanceof Error ? e.message : String(e));
+          void cmd.getMonitors().then(setMonitors);
+        });
         if (finalWrite) this.resetHideTimer();
         else this.clearHideTimer();
       },
@@ -274,6 +284,15 @@ export class App {
           updateMonitorContrast(e.monitorId, e.contrast, true),
         );
         this.flyout.updateContrastVisual(e.monitorId, e.contrast);
+      }),
+    );
+    this.unsubs.push(
+      await ev.onSdrBrightnessChanged((e) => {
+        if (this.dragging || this.flyout.isDragging()) return;
+        this.withSuppressedRender(() =>
+          updateMonitorSdrBrightness(e.monitorId, e.brightness, true),
+        );
+        this.flyout.updateSdrBrightnessVisual(e.monitorId, e.brightness);
       }),
     );
     this.unsubs.push(

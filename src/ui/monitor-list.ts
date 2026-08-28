@@ -9,9 +9,11 @@ export interface MonitorListOptions {
   monitors: MonitorInfo[];
   step: number;
   onBrightness: (id: string, value: number, finalWrite: boolean) => void;
+  onSdrBrightness?: (id: string, value: number, finalWrite: boolean) => void;
   onSelect?: (id: string) => void;
   onDragState?: (dragging: boolean) => void;
   collectValueEl?: (id: string, el: HTMLElement) => void;
+  collectSdrSlider?: (id: string, slider: BrightnessSlider, valueEl: HTMLElement) => void;
 }
 
 export function renderMonitorList(
@@ -56,6 +58,33 @@ export function renderMonitorList(
     });
     slot.appendChild(slider.el);
     sliders.push(slider);
+
+    if (m.sdrControllable && opts.onSdrBrightness) {
+      const sdrLabel = document.createElement("div");
+      sdrLabel.className = "flyout-row__sdr-label";
+      sdrLabel.textContent = "SDR";
+      const sdrValue = document.createElement("div");
+      sdrValue.className = "flyout-row__value flyout-row__sdr-value";
+      sdrValue.textContent = formatPercent(m.sdrBrightness);
+      const sdrSlot = document.createElement("div");
+      sdrSlot.className = "flyout-row__slider flyout-row__sdr-slider";
+      row.append(sdrLabel, sdrValue, sdrSlot);
+      const sdrSlider = new BrightnessSlider({
+        value: m.sdrBrightness,
+        step: opts.step,
+        ariaLabel: t("flyout.sdrBrightnessOf", { name: monitorLabel(m) }),
+        onDragState: (d) => opts.onDragState?.(d),
+        onPreview: (v) => {
+          sdrValue.textContent = formatPercent(v);
+        },
+        onInput: (v, finalWrite) => {
+          sdrValue.textContent = formatPercent(v);
+          opts.onSdrBrightness?.(m.id, v, finalWrite);
+        },
+      });
+      sdrSlot.appendChild(sdrSlider.el);
+      opts.collectSdrSlider?.(m.id, sdrSlider, sdrValue);
+    }
 
     if (!m.isControllable) {
       const st = document.createElement("div");

@@ -14,6 +14,9 @@ export const en: Messages = {
   "flyout.brightnessContrast": "Brightness / Contrast",
   "flyout.brightnessAria": "Display brightness",
   "flyout.contrastAria": "Display contrast",
+  "flyout.sdrBrightness": "SDR content brightness",
+  "flyout.sdrBrightnessAria": "SDR content brightness",
+  "flyout.sdrBrightnessOf": "{name} SDR content brightness",
   "flyout.settingsAria": "Settings",
   "flyout.brightnessOf": "{name} brightness",
 

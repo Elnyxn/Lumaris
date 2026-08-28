@@ -37,6 +37,7 @@
 | | Feature | Description |
 |:---:|:---|:---|
 | 🔆 | **Precise brightness** | External displays via DDC/CI (VCP 0x10) / standard brightness API; laptop panels via WMI/ACPI backlight |
+| ☀️ | **SDR content brightness** | Per-display control while HDR is active; shown only when supported |
 | 🖥️ | **Multi-monitor** | Vertical stack layout; sync / independent / fixed targets |
 | ⌨️ | **Global hotkeys** | Fully customizable; hold-to-accelerate curve; tap uses configured step |
 | 🖱️ | **Tray scroll** | Hover the tray icon and scroll to adjust — no window required |
@@ -181,6 +182,7 @@ Uninstall keeps user config by default so preferences survive reinstalls.
 - [x] Dark / light · zh-CN / EN  
 - [x] Tray scroll · hotkey acceleration  
 - [x] In-app GitHub update check  
+- [x] SDR content brightness in HDR mode
 - [ ] More VCP features where supported  
 - [ ] Signed installer / update channel  
 

@@ -201,6 +201,44 @@ pub fn set_contrast(
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SetSdrBrightnessArgs {
+    pub monitor_id: String,
+    pub percent: u32,
+    pub final_write: bool,
+}
+
+#[tauri::command]
+pub fn set_sdr_brightness(
+    app: AppHandle,
+    state: State<AppState>,
+    args: SetSdrBrightnessArgs,
+) -> Result<u32, String> {
+    ensure_known_monitor(&state, &args.monitor_id)?;
+    let actual = state
+        .monitors
+        .set_sdr_brightness(&args.monitor_id, args.percent, args.final_write)
+        .map_err(|e| {
+            tracing::warn!(
+                id = %crate::logging::short_id(&args.monitor_id),
+                error = %e,
+                "SDR 内容亮度写入失败"
+            );
+            e.user_message()
+        })?;
+    if args.final_write {
+        let _ = app.emit(
+            events::EVT_SDR_BRIGHTNESS_CHANGED,
+            events::SdrBrightnessChangedEvent {
+                monitor_id: args.monitor_id,
+                brightness: actual,
+            },
+        );
+    }
+    Ok(actual)
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AdjustBrightnessArgs {
     pub delta_steps: i32,
     pub final_write: bool,
@@ -313,16 +351,18 @@ pub fn show_flyout(
             )
         });
 
-    let mon_count = state.monitors.list().len();
+    let monitors = state.monitors.list();
+    let mon_count = monitors.len();
+    let sdr_count = monitors.iter().filter(|m| m.sdr_controllable).count();
     // 对比度仅单屏生效；多屏堆叠不加高度
     let show_c = state.config.read().show_contrast && mon_count <= 1;
 
     let _ = win.set_ignore_cursor_events(false);
 
     // 始终按 page 定尺寸（flyout ↔ settings 高度不同）；禁止“已显示就跳过”导致设置页锁死在浮窗高度
-    if let Err(e) = position_flyout(&win, &work, Some(page), dpi, show_c, mon_count) {
+    if let Err(e) = position_flyout(&win, &work, Some(page), dpi, show_c, mon_count, sdr_count) {
         tracing::warn!(error = %e, "定位浮窗失败，回退固定尺寸");
-        let _ = apply_fixed_size(&win, Some(page), show_c, mon_count);
+        let _ = apply_fixed_size(&win, Some(page), show_c, mon_count, sdr_count);
     }
 
     let already = win.is_visible().unwrap_or(false);
@@ -362,14 +402,19 @@ pub fn resize_flyout(
         .get_webview_window("main")
         .ok_or_else(|| "主窗口不存在".to_string())?;
     // 无法可靠知前端 page 时保持 flyout 尺寸，避免乱跳
-    let (show_contrast, mon_count) = app
+    let (show_contrast, mon_count, sdr_count) = app
         .try_state::<AppState>()
         .map(|s| {
-            let n = s.monitors.list().len();
-            (s.config.read().show_contrast && n <= 1, n)
+            let monitors = s.monitors.list();
+            let n = monitors.len();
+            (
+                s.config.read().show_contrast && n <= 1,
+                n,
+                monitors.iter().filter(|m| m.sdr_controllable).count(),
+            )
         })
-        .unwrap_or((false, 1));
-    apply_fixed_size(&win, Some("flyout"), show_contrast, mon_count)
+        .unwrap_or((false, 1, 0));
+    apply_fixed_size(&win, Some("flyout"), show_contrast, mon_count, sdr_count)
         .map_err(|e| e.to_string())?;
     let _ = win.set_ignore_cursor_events(false);
     Ok(())

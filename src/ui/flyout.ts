@@ -9,6 +9,7 @@ import { iconContrast, iconMonitor, iconSettings, iconSun } from "./icons";
 export interface FlyoutHandlers {
   onBrightness: (id: string, value: number, finalWrite: boolean) => void;
   onContrast: (id: string, value: number, finalWrite: boolean) => void;
+  onSdrBrightness: (id: string, value: number, finalWrite: boolean) => void;
   onPrev: () => void;
   onNext: () => void;
   onSettings: () => void;
@@ -21,10 +22,14 @@ export class FlyoutView {
   readonly root: HTMLElement;
   private slider: BrightnessSlider | null = null;
   private contrastSlider: BrightnessSlider | null = null;
+  private sdrSlider: BrightnessSlider | null = null;
   private valueEl: HTMLElement | null = null;
   private contrastValueEl: HTMLElement | null = null;
+  private sdrValueEl: HTMLElement | null = null;
   private listSliders: BrightnessSlider[] = [];
   private listValueEls = new Map<string, HTMLElement>();
+  private listSdrSliders = new Map<string, BrightnessSlider>();
+  private listSdrValueEls = new Map<string, HTMLElement>();
   private handlers: FlyoutHandlers;
   private boundId: string | null = null;
 
@@ -36,10 +41,17 @@ export class FlyoutView {
   }
 
   isDragging(): boolean {
-    if (this.slider?.isDragging() || this.contrastSlider?.isDragging()) {
+    if (
+      this.slider?.isDragging() ||
+      this.contrastSlider?.isDragging() ||
+      this.sdrSlider?.isDragging()
+    ) {
       return true;
     }
-    return this.listSliders.some((s) => s.isDragging());
+    return (
+      this.listSliders.some((s) => s.isDragging()) ||
+      [...this.listSdrSliders.values()].some((s) => s.isDragging())
+    );
   }
 
   render(): void {
@@ -74,6 +86,14 @@ export class FlyoutView {
         <div class="flyout__value" data-cvalue>${m ? formatPercent(m.cachedContrast ?? 50) : "—"}</div>
       </div>`
         : "";
+    const sdrRow = m?.sdrControllable
+      ? `
+      <div class="flyout__body flyout__body--sdr">
+        <div class="flyout__sdr-label" aria-hidden="true">SDR</div>
+        <div data-sdr-slider class="flyout__slider-slot"></div>
+        <div class="flyout__value" data-sdr-value>${formatPercent(m.sdrBrightness)}</div>
+      </div>`
+      : "";
 
     this.root.innerHTML = `
       <div class="flyout__header">
@@ -88,6 +108,7 @@ export class FlyoutView {
         <div data-slider class="flyout__slider-slot"></div>
         <div class="flyout__value" data-value>${m ? formatPercent(m.cachedBrightness) : "—"}</div>
       </div>
+      ${sdrRow}
       ${contrastRow}
       <div class="flyout__footer">
         <span class="flyout__footer-label" aria-hidden="true">${escapeHtml(showContrast ? t("flyout.brightnessContrast") : t("flyout.adjustBrightness"))}</span>
@@ -130,6 +151,28 @@ export class FlyoutView {
       },
     });
     slot.appendChild(this.slider.el);
+
+    this.sdrSlider = null;
+    this.sdrValueEl = null;
+    if (m?.sdrControllable) {
+      const sdrSlot = this.root.querySelector("[data-sdr-slider]") as HTMLElement;
+      this.sdrValueEl = this.root.querySelector("[data-sdr-value]") as HTMLElement;
+      this.sdrSlider = new BrightnessSlider({
+        value: m.sdrBrightness,
+        step,
+        ariaLabel: t("flyout.sdrBrightnessAria"),
+        onDragState: (d) => this.handlers.onDragState?.(d),
+        onPreview: (v) => {
+          if (this.sdrValueEl) this.sdrValueEl.textContent = formatPercent(v);
+        },
+        onInput: (v, finalWrite) => {
+          if (this.sdrValueEl) this.sdrValueEl.textContent = formatPercent(v);
+          this.handlers.onSdrBrightness(m.id, v, finalWrite);
+          this.handlers.onInteract();
+        },
+      });
+      sdrSlot.appendChild(this.sdrSlider.el);
+    }
 
     this.contrastSlider = null;
     this.contrastValueEl = null;
@@ -182,10 +225,14 @@ export class FlyoutView {
     const list = this.root.querySelector("[data-list]") as HTMLElement;
     this.slider = null;
     this.contrastSlider = null;
+    this.sdrSlider = null;
     this.valueEl = null;
     this.contrastValueEl = null;
+    this.sdrValueEl = null;
     this.boundId = null;
     this.listValueEls.clear();
+    this.listSdrSliders.clear();
+    this.listSdrValueEls.clear();
     this.listSliders = renderMonitorList(list, {
       monitors: getState().monitors,
       step,
@@ -193,10 +240,18 @@ export class FlyoutView {
         this.handlers.onBrightness(id, v, finalWrite);
         this.handlers.onInteract();
       },
+      onSdrBrightness: (id, v, finalWrite) => {
+        this.handlers.onSdrBrightness(id, v, finalWrite);
+        this.handlers.onInteract();
+      },
       onSelect: (id) => this.handlers.onSelect(id),
       onDragState: (d) => this.handlers.onDragState?.(d),
       collectValueEl: (id, el) => {
         this.listValueEls.set(id, el);
+      },
+      collectSdrSlider: (id, slider, valueEl) => {
+        this.listSdrSliders.set(id, slider);
+        this.listSdrValueEls.set(id, valueEl);
       },
     });
     this.root
@@ -228,6 +283,20 @@ export class FlyoutView {
       if (this.contrastValueEl)
         this.contrastValueEl.textContent = formatPercent(value);
     }
+  }
+
+
+  updateSdrBrightnessVisual(id: string, value: number): void {
+    if (this.isDragging()) return;
+    if (this.sdrSlider && this.boundId === id) {
+      this.sdrSlider.setValue(value, false);
+      if (this.sdrValueEl) this.sdrValueEl.textContent = formatPercent(value);
+      return;
+    }
+    const slider = this.listSdrSliders.get(id);
+    slider?.setValue(value, false);
+    const valueEl = this.listSdrValueEls.get(id);
+    if (valueEl) valueEl.textContent = formatPercent(value);
   }
 }
 

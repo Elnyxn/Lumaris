@@ -98,6 +98,17 @@ export function updateMonitorContrast(
   if (!silent) emit();
 }
 
+export function updateMonitorSdrBrightness(
+  id: string,
+  brightness: number,
+  silent = false,
+): void {
+  state.monitors = state.monitors.map((m) =>
+    m.id === id ? { ...m, sdrBrightness: brightness } : m,
+  );
+  if (!silent) emit();
+}
+
 export function selectedMonitor(): MonitorInfo | null {
   if (!state.selectedId) return state.monitors[0] ?? null;
   return state.monitors.find((m) => m.id === state.selectedId) ?? null;

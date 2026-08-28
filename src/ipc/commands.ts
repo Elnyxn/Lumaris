@@ -43,6 +43,16 @@ export async function setContrast(
   });
 }
 
+export async function setSdrBrightness(
+  monitorId: string,
+  percent: number,
+  finalWrite: boolean,
+): Promise<number> {
+  return invoke<number>("set_sdr_brightness", {
+    args: { monitorId, percent, finalWrite },
+  });
+}
+
 export async function adjustBrightness(
   deltaSteps: number,
   finalWrite: boolean,

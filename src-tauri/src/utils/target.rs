@@ -72,6 +72,8 @@ mod tests {
             min_contrast: 0,
             max_contrast: 100,
             contrast_controllable: false,
+            sdr_brightness: 0,
+            sdr_controllable: false,
             control_method: if controllable {
                 ControlMethod::VcpCode10
             } else {

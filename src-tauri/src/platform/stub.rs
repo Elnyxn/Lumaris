@@ -43,6 +43,8 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
         min_contrast: 0,
         max_contrast: 100,
         contrast_controllable: false,
+        sdr_brightness: 0,
+        sdr_controllable: false,
         control_method: ControlMethod::Unsupported,
         status: MonitorStatus::Unsupported,
         is_primary: true,
@@ -58,10 +60,7 @@ pub fn read_brightness(_id: &str) -> LumarisResult<(u32, u32, u32, ControlMethod
     Err(LumarisError::ddc("非 Windows 平台"))
 }
 
-pub fn write_brightness(
-    _id: &str,
-    _percent: u32,
-) -> LumarisResult<(u32, ControlMethod)> {
+pub fn write_brightness(_id: &str, _percent: u32) -> LumarisResult<(u32, ControlMethod)> {
     Err(LumarisError::ddc("非 Windows 平台"))
 }
 
@@ -71,6 +70,10 @@ pub fn read_contrast(_id: &str) -> LumarisResult<(u32, u32, u32)> {
 
 pub fn write_contrast(_id: &str, _percent: u32) -> LumarisResult<u32> {
     Err(LumarisError::ddc("非 Windows 平台"))
+}
+
+pub fn write_sdr_brightness(_id: &str, _percent: u32, _final_write: bool) -> LumarisResult<u32> {
+    Err(LumarisError::monitor("非 Windows 平台不支持 SDR 内容亮度"))
 }
 
 pub fn install_system_message_hook(_hwnd: isize) -> LumarisResult<()> {

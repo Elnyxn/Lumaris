@@ -37,6 +37,19 @@ export async function onContrastChanged(
   );
 }
 
+export interface SdrBrightnessChangedEvent {
+  monitorId: string;
+  brightness: number;
+}
+
+export async function onSdrBrightnessChanged(
+  cb: (e: SdrBrightnessChangedEvent) => void,
+): Promise<UnlistenFn> {
+  return listen<SdrBrightnessChangedEvent>("sdr-brightness-changed", (ev) =>
+    cb(ev.payload),
+  );
+}
+
 export async function onOperationResult(
   cb: (e: OperationResultEvent) => void,
 ): Promise<UnlistenFn> {

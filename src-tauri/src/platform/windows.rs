@@ -58,6 +58,10 @@ static PHYSICAL_CACHE: Lazy<RwLock<HashMap<String, PhysicalEntry>>> =
 static WMI_BACKLIGHT_IDS: Lazy<RwLock<std::collections::HashSet<String>>> =
     Lazy::new(|| RwLock::new(std::collections::HashSet::new()));
 
+/// Lumaris monitor id → GDI source name（用于 DisplayConfig SDR 目标匹配）
+static SDR_DEVICE_NAMES: Lazy<RwLock<HashMap<String, String>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
+
 static ENUM_ACCUM: Lazy<RwLock<Vec<RawEnum>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 struct RawEnum {
@@ -374,6 +378,7 @@ pub fn clear_physical_cache() {
 pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
     // 先清空旧句柄
     clear_physical_cache();
+    SDR_DEVICE_NAMES.write().clear();
     ENUM_ACCUM.write().clear();
 
     unsafe {
@@ -415,7 +420,11 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
                 "logical-only",
             ]);
             device_paths.insert(id.clone(), device_id.clone());
+            SDR_DEVICE_NAMES
+                .write()
+                .insert(id.clone(), device_name.clone());
             let is_external = !is_primary;
+            let sdr = crate::platform::sdr_white_level::probe(&device_name);
             result.push(MonitorInfo {
                 id: id.clone(),
                 display_name: desc.clone(),
@@ -430,6 +439,8 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
                 min_contrast: 0,
                 max_contrast: 100,
                 contrast_controllable: false,
+                sdr_brightness: sdr.unwrap_or(0),
+                sdr_controllable: sdr.is_some(),
                 control_method: ControlMethod::Unsupported,
                 status: MonitorStatus::Unsupported,
                 is_primary,
@@ -462,6 +473,9 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
                 },
             );
             device_paths.insert(id.clone(), device_id.clone());
+            SDR_DEVICE_NAMES
+                .write()
+                .insert(id.clone(), device_name.clone());
 
             let display_name = if !device_string.is_empty() {
                 // 优先友好名（Lenovo / HKC），物理描述常是 Generic PnP
@@ -476,6 +490,13 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
             let (method, min_b, max_b, cur, status, controllable) =
                 unsafe { probe_brightness(&phys) };
             let (c_ok, c_min, c_max, c_cur) = unsafe { probe_contrast(&phys) };
+            // SDR white level 属于 GDI 逻辑显示路径；一个逻辑屏即使枚举出多个
+            // PHYSICAL_MONITOR，也只暴露一个 SDR 滑块，避免重复控制同一目标。
+            let sdr = if idx == 0 {
+                crate::platform::sdr_white_level::probe(&device_name)
+            } else {
+                None
+            };
 
             result.push(MonitorInfo {
                 id,
@@ -491,6 +512,8 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
                 min_contrast: c_min,
                 max_contrast: c_max,
                 contrast_controllable: c_ok,
+                sdr_brightness: sdr.unwrap_or(0),
+                sdr_controllable: sdr.is_some(),
                 control_method: method,
                 status,
                 is_primary,
@@ -559,6 +582,15 @@ pub fn enumerate_monitors() -> LumarisResult<Vec<MonitorInfo>> {
 
     tracing::info!(count = result.len(), "显示器枚举完成");
     Ok(result)
+}
+
+pub fn write_sdr_brightness(id: &str, percent: u32, final_write: bool) -> LumarisResult<u32> {
+    let device_name = SDR_DEVICE_NAMES
+        .read()
+        .get(id)
+        .cloned()
+        .ok_or_else(|| LumarisError::monitor("显示器 SDR 路径不可用"))?;
+    crate::platform::sdr_white_level::write(&device_name, percent, final_write)
 }
 
 fn is_wmi_id(id: &str) -> bool {
@@ -932,4 +964,3 @@ pub fn position_window_bottom_right(
     let _ = (width_px, height_px); // size may already be set by Tauri
     Ok(())
 }
-

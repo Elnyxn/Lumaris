@@ -13,6 +13,9 @@ export const zhCN = {
   "flyout.brightnessContrast": "亮度 / 对比度",
   "flyout.brightnessAria": "显示器亮度",
   "flyout.contrastAria": "显示器对比度",
+  "flyout.sdrBrightness": "SDR 内容亮度",
+  "flyout.sdrBrightnessAria": "SDR 内容亮度",
+  "flyout.sdrBrightnessOf": "{name} SDR 内容亮度",
   "flyout.settingsAria": "设置",
   "flyout.brightnessOf": "{name} 亮度",
 

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub const EVT_MONITORS_CHANGED: &str = "monitors-changed";
 pub const EVT_BRIGHTNESS_CHANGED: &str = "brightness-changed";
 pub const EVT_CONTRAST_CHANGED: &str = "contrast-changed";
+pub const EVT_SDR_BRIGHTNESS_CHANGED: &str = "sdr-brightness-changed";
 pub const EVT_OPERATION_RESULT: &str = "operation-result";
 pub const EVT_HOTKEY_ACTION: &str = "hotkey-action";
 pub const EVT_WINDOW_SHOWN: &str = "window-shown";
@@ -30,6 +31,13 @@ pub struct ContrastChangedEvent {
     pub contrast: u32,
     pub cached: bool,
     pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SdrBrightnessChangedEvent {
+    pub monitor_id: String,
+    pub brightness: u32,
 }
 
 #[derive(Debug, Clone, Serialize)]

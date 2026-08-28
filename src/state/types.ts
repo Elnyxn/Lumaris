@@ -48,6 +48,8 @@ export interface MonitorInfo {
   minContrast: number;
   maxContrast: number;
   contrastControllable: boolean;
+  sdrBrightness: number;
+  sdrControllable: boolean;
   controlMethod: ControlMethod;
   status: MonitorStatus;
   isPrimary: boolean;

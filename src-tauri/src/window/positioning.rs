@@ -9,6 +9,10 @@ pub const FLYOUT_WIDTH: f64 = 360.0;
 pub const FLYOUT_HEIGHT: f64 = 122.0;
 /// 单显示器 · 亮度 + 对比度
 pub const FLYOUT_HEIGHT_WITH_CONTRAST: f64 = 158.0;
+/// 单屏 SDR 行：32px 控件 + 6px flex 间距
+const FLYOUT_SDR_SINGLE_ROW: f64 = 38.0;
+/// 多屏 SDR：标签 + 32px 滑块 + grid 间距
+const FLYOUT_SDR_STACK_ROW: f64 = 52.0;
 /// 堆叠列表：头+底栏+内边距
 const FLYOUT_STACK_CHROME: f64 = 92.0;
 /// 堆叠列表：单台行高（名称 + 滑条）
@@ -24,23 +28,37 @@ pub fn flyout_uses_stack(monitor_count: usize) -> bool {
     monitor_count > 1
 }
 
-pub fn flyout_height(monitor_count: usize, show_contrast: bool) -> f64 {
+pub fn flyout_height(monitor_count: usize, show_contrast: bool, sdr_count: usize) -> f64 {
     // 多屏堆叠：永不加对比度行高
     if flyout_uses_stack(monitor_count) {
         let n = monitor_count.max(1) as f64;
-        let h = FLYOUT_STACK_CHROME + n * FLYOUT_STACK_ROW + (n - 1.0).max(0.0) * FLYOUT_STACK_GAP;
+        let h = FLYOUT_STACK_CHROME
+            + n * FLYOUT_STACK_ROW
+            + (n - 1.0).max(0.0) * FLYOUT_STACK_GAP
+            + sdr_count as f64 * FLYOUT_SDR_STACK_ROW;
         h.min(FLYOUT_STACK_MAX)
-    } else if show_contrast && monitor_count <= 1 {
-        FLYOUT_HEIGHT_WITH_CONTRAST
     } else {
-        FLYOUT_HEIGHT
+        let base = if show_contrast && monitor_count <= 1 {
+            FLYOUT_HEIGHT_WITH_CONTRAST
+        } else {
+            FLYOUT_HEIGHT
+        };
+        base + usize::from(sdr_count > 0) as f64 * FLYOUT_SDR_SINGLE_ROW
     }
 }
 
-pub fn size_for_page(page: Option<&str>, show_contrast: bool, monitor_count: usize) -> (f64, f64) {
+pub fn size_for_page(
+    page: Option<&str>,
+    show_contrast: bool,
+    monitor_count: usize,
+    sdr_count: usize,
+) -> (f64, f64) {
     match page {
         Some("settings") => (SETTINGS_WIDTH, SETTINGS_HEIGHT),
-        _ => (FLYOUT_WIDTH, flyout_height(monitor_count, show_contrast)),
+        _ => (
+            FLYOUT_WIDTH,
+            flyout_height(monitor_count, show_contrast, sdr_count),
+        ),
     }
 }
 
@@ -51,8 +69,10 @@ pub fn position_flyout<R: Runtime>(
     dpi: u32,
     show_contrast: bool,
     monitor_count: usize,
+    sdr_count: usize,
 ) -> tauri::Result<()> {
-    let (width_logical, height_logical) = size_for_page(page, show_contrast, monitor_count);
+    let (width_logical, height_logical) =
+        size_for_page(page, show_contrast, monitor_count, sdr_count);
     // 使用目标屏（主屏）DPI，不用窗口当前 scale（窗口可能还在副屏上）
     let scale = {
         let d = if dpi == 0 { 96 } else { dpi };
@@ -101,8 +121,28 @@ pub fn apply_fixed_size<R: Runtime>(
     page: Option<&str>,
     show_contrast: bool,
     monitor_count: usize,
+    sdr_count: usize,
 ) -> tauri::Result<()> {
-    let (w, h) = size_for_page(page, show_contrast, monitor_count);
+    let (w, h) = size_for_page(page, show_contrast, monitor_count, sdr_count);
     window.set_size(LogicalSize::new(w, h))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn single_display_rows_are_counted() {
+        assert_eq!(flyout_height(1, false, 0), 122.0);
+        assert_eq!(flyout_height(1, false, 1), 160.0);
+        assert_eq!(flyout_height(1, true, 1), 196.0);
+    }
+
+    #[test]
+    fn stacked_sdr_rows_use_full_grid_height() {
+        assert_eq!(flyout_height(2, false, 0), 222.0);
+        assert_eq!(flyout_height(2, false, 1), 274.0);
+        assert_eq!(flyout_height(2, false, 2), 326.0);
+    }
 }

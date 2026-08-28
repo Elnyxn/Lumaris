@@ -87,6 +87,9 @@ pub struct MonitorInfo {
     pub max_contrast: u32,
     /// 是否支持 DDC 对比度（VCP 0x12）
     pub contrast_controllable: bool,
+    /// HDR 模式下的 SDR 内容亮度（Windows 白电平，0-100%）
+    pub sdr_brightness: u32,
+    pub sdr_controllable: bool,
     pub control_method: ControlMethod,
     pub status: MonitorStatus,
     pub is_primary: bool,

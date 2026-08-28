@@ -135,6 +135,32 @@ impl MonitorManager {
         }
     }
 
+    pub fn set_sdr_brightness(
+        &self,
+        id: &str,
+        percent: u32,
+        final_write: bool,
+    ) -> LumarisResult<u32> {
+        if *self.sleeping.read() {
+            return Err(LumarisError::monitor("显示器正在休眠"));
+        }
+        let controllable = self
+            .monitors
+            .read()
+            .iter()
+            .find(|m| m.id == id)
+            .map(|m| m.sdr_controllable)
+            .unwrap_or(false);
+        if !controllable {
+            return Err(LumarisError::monitor("当前显示器不支持 SDR 内容亮度"));
+        }
+        let actual = crate::platform::write_sdr_brightness(id, percent.min(100), final_write)?;
+        if let Some(m) = self.monitors.write().iter_mut().find(|m| m.id == id) {
+            m.sdr_brightness = actual;
+        }
+        Ok(actual)
+    }
+
     pub fn read_brightness(&self, id: &str) {
         if let Some(w) = self.worker.read().as_ref() {
             w.send(MonitorCommand::ReadBrightness {
