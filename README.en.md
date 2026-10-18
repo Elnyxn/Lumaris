@@ -93,7 +93,9 @@ Checksums ship as `SHA256SUMS.txt` on the release page.
 
 ### Day / Night modes
 
-Adjust each display to your daytime brightness, then choose **Settings → Brightness modes → Day → Save current**. Repeat for Night. Use the **Day** or **Night** button in the flyout footer to switch. Levels are stored by display identity, survive restarts, and retain temporarily disconnected displays.
+Turn on **Enable brightness modes** under **Settings → Brightness modes** (off by default). Choose Day or Night, then set each display with its slider and percentage input. **Save** remembers the values without changing the screens; **Apply** adjusts the screens. **Read current** fills in the current levels. Once configured, use the **Day** and **Night** buttons in the flyout footer. Turning the feature off hides its controls and keeps the saved modes.
+
+Levels are stored by display identity, survive restarts, and retain temporarily disconnected displays.
 
 **Settings → Interface → Flyout scroll threshold** lets you choose 20–100% of the primary display's usable height (default: 50%). Scrolling appears only when the content exceeds that limit.
 

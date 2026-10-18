@@ -105,6 +105,7 @@ export interface AppConfig {
   readBrightnessOnStart: boolean;
   /** 首屏是否显示对比度滑块 */
   showContrast: boolean;
+  brightnessPresetsEnabled: boolean;
   brightnessPresets: Record<BrightnessPresetMode, Record<string, number>>;
   flyoutMaxHeightPercent: number;
   /** UI 语言：zh-CN | en */

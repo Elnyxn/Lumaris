@@ -459,6 +459,7 @@ pub struct UpdateConfigPatch {
     pub read_brightness_on_start: Option<bool>,
     pub show_contrast: Option<bool>,
     pub flyout_max_height_percent: Option<u32>,
+    pub brightness_presets_enabled: Option<bool>,
     pub locale: Option<String>,
     pub osd: Option<OsdSettings>,
     pub ui: Option<UiSettings>,
@@ -514,6 +515,9 @@ pub fn update_config(
         }
         if let Some(v) = patch.flyout_max_height_percent {
             cfg.flyout_max_height_percent = v;
+        }
+        if let Some(v) = patch.brightness_presets_enabled {
+            cfg.brightness_presets_enabled = v;
         }
         if let Some(v) = patch.locale {
             cfg.locale = v;

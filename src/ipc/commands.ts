@@ -99,8 +99,11 @@ export async function getConfig(): Promise<AppConfig> {
   return invoke("get_config");
 }
 
-export async function saveBrightnessPreset(mode: BrightnessPresetMode): Promise<AppConfig> {
-  return invoke("save_brightness_preset", { mode });
+export async function saveBrightnessPreset(
+  mode: BrightnessPresetMode,
+  brightness?: Record<string, number>,
+): Promise<AppConfig> {
+  return invoke("save_brightness_preset", { mode, brightness: brightness ?? null });
 }
 
 export async function applyBrightnessPreset(mode: BrightnessPresetMode): Promise<{

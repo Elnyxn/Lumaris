@@ -102,27 +102,29 @@ export class FlyoutView {
     } else {
       this.renderSingle(step);
     }
-    const presets = document.createElement("div");
-    presets.className = "flyout__presets";
-    for (const mode of ["day", "night"] as const) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "text-btn flyout__preset";
-      button.textContent = t(`preset.${mode}`);
-      button.setAttribute("aria-label", t("preset.applyAria", { mode: t(`preset.${mode}`) }));
-      button.disabled = !Object.keys(cfg?.brightnessPresets?.[mode] ?? {}).length;
-      button.addEventListener("click", async () => {
-        button.disabled = true;
-        try {
-          await this.handlers.onApplyBrightnessPreset(mode);
-        } finally {
-          button.disabled = !Object.keys(getState().config?.brightnessPresets?.[mode] ?? {}).length;
-        }
-      });
-      presets.appendChild(button);
+    if (cfg?.brightnessPresetsEnabled === true) {
+      const presets = document.createElement("div");
+      presets.className = "flyout__presets";
+      for (const mode of ["day", "night"] as const) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "text-btn flyout__preset";
+        button.textContent = t(`preset.${mode}`);
+        button.setAttribute("aria-label", t("preset.applyAria", { mode: t(`preset.${mode}`) }));
+        button.disabled = !Object.keys(cfg.brightnessPresets?.[mode] ?? {}).length;
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try {
+            await this.handlers.onApplyBrightnessPreset(mode);
+          } finally {
+            button.disabled = !Object.keys(getState().config?.brightnessPresets?.[mode] ?? {}).length;
+          }
+        });
+        presets.appendChild(button);
+      }
+      const footer = this.root.querySelector(".flyout__footer")!;
+      footer.insertBefore(presets, footer.querySelector('[data-act="settings"]'));
     }
-    const footer = this.root.querySelector(".flyout__footer")!;
-    footer.insertBefore(presets, footer.querySelector('[data-act="settings"]'));
     this.layoutObserver.disconnect();
     this.layoutObserver.observe(this.root);
     // 字体加载、状态换行和 SDR 行都可能改变自然高度，即使窗口已达到上限。

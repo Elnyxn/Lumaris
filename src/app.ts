@@ -121,17 +121,14 @@ export class App {
 
     this.settings = new SettingsView({
       onBack: () => void this.openPage("flyout"),
-      onSaveBrightnessPreset: async (mode) => {
-        try {
-          const cfg = await cmd.saveBrightnessPreset(mode);
-          this.withSuppressedRender(() => patch({ config: cfg }));
-          if (getState().page === "settings") this.renderSettingsPreservingScroll();
-          else this.render();
-          this.lastRenderKey = this.renderKey();
-          showToast(t("preset.saved", { mode: t(`preset.${mode}`) }));
-        } catch (e) {
-          showToast(e instanceof Error ? e.message : String(e));
-        }
+      onSaveBrightnessPreset: async (mode, brightness) => {
+        const cfg = await cmd.saveBrightnessPreset(mode, brightness);
+        this.withSuppressedRender(() => patch({ config: cfg }));
+        if (getState().page === "settings") this.settings.refreshBrightnessPresets();
+        else this.render();
+        this.lastRenderKey = this.renderKey();
+        showToast(t("preset.saved", { mode: t(`preset.${mode}`) }));
+        return cfg;
       },
       onApplyBrightnessPreset: (mode) => this.applyBrightnessPreset(mode),
       onPatchConfig: async (p) => {
@@ -147,6 +144,7 @@ export class App {
         if (localeChanged && getState().page === "settings") {
           this.renderSettingsPreservingScroll();
         }
+        if (getState().page === "settings") this.settings.refreshBrightnessPresets();
         this.lastRenderKey = this.renderKey();
         // 开关对比度后需调整浮窗高度
         if (
@@ -329,6 +327,7 @@ export class App {
         if (getState().page === "flyout" && previousKey !== this.renderKey()) {
           this.render();
         }
+        if (getState().page === "settings") this.settings.refreshBrightnessPresets();
         this.lastRenderKey = this.renderKey();
       }),
     );
@@ -447,7 +446,7 @@ export class App {
           `${m.id}:${m.isSelected}:${m.status}:${m.userAlias ?? ""}:${m.isControllable}:${m.sdrControllable}:${m.isPrimary}:${m.dpi}:${JSON.stringify(m.workArea)}`,
       )
       .join("|");
-    return `${st.page}|loc:${st.config?.locale ?? "zh-CN"}|${st.config?.layoutMode}|${st.config?.showContrast}|${st.config?.flyoutMaxHeightPercent ?? 50}|${JSON.stringify(st.config?.brightnessPresets ?? {})}|${mids}`;
+    return `${st.page}|loc:${st.config?.locale ?? "zh-CN"}|${st.config?.layoutMode}|${st.config?.showContrast}|${st.config?.flyoutMaxHeightPercent ?? 50}|${st.config?.brightnessPresetsEnabled === true}|${JSON.stringify(st.config?.brightnessPresets ?? {})}|${mids}`;
   }
 
   private async applyBrightnessPreset(mode: BrightnessPresetMode): Promise<void> {
@@ -495,7 +494,7 @@ export class App {
       const cfg = getState().config;
       const key = JSON.stringify([
         height, primary?.dpi, primary?.workArea,
-        cfg?.flyoutMaxHeightPercent ?? 50, cfg?.brightnessPresets,
+        cfg?.flyoutMaxHeightPercent ?? 50, cfg?.brightnessPresetsEnabled === true, cfg?.brightnessPresets,
       ]);
       if (key === this.lastFlyoutSizeKey) return;
       this.lastFlyoutSizeKey = key;

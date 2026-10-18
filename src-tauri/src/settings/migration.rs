@@ -78,9 +78,16 @@ mod tests {
         let old =
             migrate_config(serde_json::json!({"schemaVersion": 1, "stepPercent": 10})).unwrap();
         assert_eq!(old.flyout_max_height_percent, 50);
+        assert!(!old.brightness_presets_enabled);
         assert!(old.brightness_presets.day.is_empty());
         assert!(old.brightness_presets.night.is_empty());
         let roundtrip = migrate_config(serde_json::to_value(&cfg).unwrap()).unwrap();
         assert_eq!(roundtrip.brightness_presets, cfg.brightness_presets);
+        cfg.brightness_presets_enabled = true;
+        let enabled = migrate_config(serde_json::to_value(&cfg).unwrap()).unwrap();
+        assert!(enabled.brightness_presets_enabled);
+        cfg.brightness_presets_enabled = false;
+        cfg.validate_mut();
+        assert_eq!(cfg.brightness_presets, enabled.brightness_presets);
     }
 }

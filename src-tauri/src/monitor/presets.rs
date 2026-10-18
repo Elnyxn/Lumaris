@@ -2,23 +2,30 @@
 
 use super::device::{MonitorInfo, MonitorStatus};
 use crate::settings::{BrightnessPresetMode, BrightnessPresets};
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PresetError {
+    Disabled,
     NoWritableMonitors,
     NotSaved,
     NoMatchingMonitors,
+    InvalidBrightness,
 }
 
 impl PresetError {
     pub fn message(&self, locale: &str) -> &'static str {
         match (self, locale.starts_with("en")) {
+            (Self::Disabled, false) => "请先启用亮度模式",
+            (Self::Disabled, true) => "Enable brightness modes first",
             (Self::NoWritableMonitors, false) => "没有可保存的显示器",
             (Self::NotSaved, false) => "请先保存该模式",
             (Self::NoMatchingMonitors, false) => "该模式的显示器未连接或不可调节",
             (Self::NoWritableMonitors, true) => "No adjustable displays to save",
             (Self::NotSaved, true) => "Save this mode first",
             (Self::NoMatchingMonitors, true) => "No saved displays are currently adjustable",
+            (Self::InvalidBrightness, false) => "亮度须在 0–100% 之间",
+            (Self::InvalidBrightness, true) => "Brightness must be between 0 and 100%",
         }
     }
 }
@@ -48,6 +55,34 @@ pub fn capture(
     for monitor in current {
         saved.insert(monitor.id.clone(), monitor.cached_brightness.min(100));
     }
+    Ok(())
+}
+
+/// Save editor values without changing hardware. Validate the whole selection
+/// before merging, and retain existing entries for unplugged displays.
+pub fn save_values(
+    presets: &mut BrightnessPresets,
+    mode: BrightnessPresetMode,
+    monitors: &[MonitorInfo],
+    values: &HashMap<String, u32>,
+) -> Result<(), PresetError> {
+    if values.is_empty() {
+        return Err(PresetError::NoWritableMonitors);
+    }
+    for (id, brightness) in values {
+        if *brightness > 100 {
+            return Err(PresetError::InvalidBrightness);
+        }
+        if !monitors
+            .iter()
+            .any(|monitor| monitor.id == *id && writable(monitor))
+        {
+            return Err(PresetError::NoMatchingMonitors);
+        }
+    }
+    presets
+        .get_mut(mode)
+        .extend(values.iter().map(|(id, value)| (id.clone(), *value)));
     Ok(())
 }
 
@@ -189,5 +224,44 @@ mod tests {
             plan(&presets, BrightnessPresetMode::Day, &[monitor("new", 1)]),
             Err(PresetError::NoMatchingMonitors)
         );
+    }
+
+    #[test]
+    fn editor_values_save_without_using_current_brightness_and_reject_invalid_batches() {
+        let mut presets = BrightnessPresets::default();
+        let monitors = [monitor("a", 80), monitor("b", 70)];
+        let values = HashMap::from([("a".into(), 15), ("b".into(), 25)]);
+        save_values(
+            &mut presets,
+            BrightnessPresetMode::Night,
+            &monitors,
+            &values,
+        )
+        .unwrap();
+        assert_eq!(presets.night["a"], 15);
+        assert_eq!(presets.night["b"], 25);
+        // Re-save just a: b is still remembered while unplugged.
+        save_values(
+            &mut presets,
+            BrightnessPresetMode::Night,
+            &monitors[..1],
+            &HashMap::from([("a".into(), 20)]),
+        )
+        .unwrap();
+        assert_eq!(presets.night["b"], 25);
+        let before = presets.clone();
+        for invalid in [
+            HashMap::from([("a".into(), 101)]),
+            HashMap::from([("unknown".into(), 20), ("a".into(), 30)]),
+        ] {
+            assert!(save_values(
+                &mut presets,
+                BrightnessPresetMode::Night,
+                &monitors,
+                &invalid
+            )
+            .is_err());
+            assert_eq!(presets, before);
+        }
     }
 }

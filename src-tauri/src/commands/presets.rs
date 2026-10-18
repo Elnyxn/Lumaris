@@ -5,6 +5,7 @@ use crate::monitor::presets;
 use crate::settings::{save_config, AppConfig, BrightnessPresetMode};
 use crate::state::AppState;
 use serde::Serialize;
+use std::collections::HashMap;
 use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
@@ -12,12 +13,23 @@ pub fn save_brightness_preset(
     app: AppHandle,
     state: State<AppState>,
     mode: BrightnessPresetMode,
+    brightness: Option<HashMap<String, u32>>,
 ) -> Result<AppConfig, String> {
     let monitors = state.monitors.list();
     let mut current = state.config.write();
     let mut next = current.clone();
-    presets::capture(&mut next.brightness_presets, mode, &monitors)
-        .map_err(|error| error.message(&next.locale).to_string())?;
+    if !next.brightness_presets_enabled {
+        return Err(presets::PresetError::Disabled
+            .message(&next.locale)
+            .to_string());
+    }
+    let result = match brightness {
+        Some(values) => {
+            presets::save_values(&mut next.brightness_presets, mode, &monitors, &values)
+        }
+        None => presets::capture(&mut next.brightness_presets, mode, &monitors),
+    };
+    result.map_err(|error| error.message(&next.locale).to_string())?;
     next.validate_mut();
     save_config(&next).map_err(|error| error.user_message())?;
     *current = next.clone();
@@ -40,6 +52,11 @@ pub fn apply_brightness_preset(
     mode: BrightnessPresetMode,
 ) -> Result<ApplyPresetResult, String> {
     let cfg = state.config.read().clone();
+    if !cfg.brightness_presets_enabled {
+        return Err(presets::PresetError::Disabled
+            .message(&cfg.locale)
+            .to_string());
+    }
     let plan = presets::plan(&cfg.brightness_presets, mode, &state.monitors.list())
         .map_err(|error| error.message(&cfg.locale).to_string())?;
     for (id, brightness) in &plan.writes {

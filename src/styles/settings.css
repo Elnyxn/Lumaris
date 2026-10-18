@@ -56,16 +56,90 @@
   padding: 4px 12px;
 }
 
-.preset-row__actions {
+.preset-editor {
+  padding-bottom: 6px;
+}
+
+.preset-editor__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--control-surface);
+  margin-bottom: 4px;
+}
+
+.preset-editor__tab {
+  flex: 1;
+  padding: 6px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.preset-editor__tab[aria-selected="true"] {
+  background: var(--control-hover);
+  color: var(--text-primary);
+}
+
+.preset-editor__row {
+  padding: 8px 0 4px;
+}
+
+.preset-editor__name {
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset-editor__controls {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
+  min-height: 34px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.preset-editor__range {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--control-focus);
+}
+
+.preset-editor__number.input {
+  min-width: 0;
+  width: 60px;
+  padding: 4px 6px;
   flex-shrink: 0;
 }
 
-.preset-row__actions .text-btn:disabled {
+.preset-editor__status {
+  padding: 5px 0 2px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.preset-editor__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.preset-editor button:disabled,
+.preset-editor input:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+.preset-editor button:disabled {
+  pointer-events: none;
 }
 
 .settings__percent-input {

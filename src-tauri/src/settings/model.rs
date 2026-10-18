@@ -62,6 +62,7 @@ pub struct AppConfig {
     #[serde(default)]
     pub show_contrast: bool,
     pub brightness_presets: BrightnessPresets,
+    pub brightness_presets_enabled: bool,
     pub flyout_max_height_percent: u32,
     /// UI 语言：zh-CN | en
     #[serde(default = "default_locale")]
@@ -96,6 +97,7 @@ impl Default for AppConfig {
             read_brightness_on_start: true,
             show_contrast: false,
             brightness_presets: BrightnessPresets::default(),
+            brightness_presets_enabled: false,
             flyout_max_height_percent: 50,
             locale: default_locale(),
             monitor_aliases: HashMap::new(),

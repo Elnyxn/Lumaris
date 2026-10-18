@@ -6,6 +6,7 @@ import {
   hotkeyActionToRust,
   monitorLabel,
   statusLabel,
+  type AppConfig,
   type BrightnessPresetMode,
   type HotkeyConfig,
   type TargetMode,
@@ -15,6 +16,7 @@ import * as cmd from "../ipc/commands";
 import { HotkeyRecorder } from "./hotkey-recorder";
 import { iconBack, iconGithub } from "./icons";
 import { FluentSelect } from "./select";
+import { BrightnessPresetEditor } from "./brightness-presets";
 
 const GITHUB_URL = "https://github.com/Elnyxn/Lumaris";
 const GITHUB_DISPLAY = "github.com/Elnyxn/Lumaris";
@@ -22,7 +24,7 @@ const GITHUB_DISPLAY = "github.com/Elnyxn/Lumaris";
 export interface SettingsHandlers {
   onBack: () => void;
   onPatchConfig: (patch: Record<string, unknown>) => Promise<void>;
-  onSaveBrightnessPreset: (mode: BrightnessPresetMode) => Promise<void>;
+  onSaveBrightnessPreset: (mode: BrightnessPresetMode, brightness?: Record<string, number>) => Promise<AppConfig>;
   onApplyBrightnessPreset: (mode: BrightnessPresetMode) => Promise<void>;
   onSetHotkey: (action: string, accel: string | null) => Promise<string | null>;
   onResetHotkeys: () => Promise<void>;
@@ -42,11 +44,22 @@ export class SettingsView {
   private recorders: HotkeyRecorder[] = [];
   private selects: FluentSelect[] = [];
   private configPatchQueue: Promise<void> = Promise.resolve();
+  private presetEditor: BrightnessPresetEditor;
+  private presetSwitch: HTMLButtonElement | null = null;
 
   constructor(handlers: SettingsHandlers) {
     this.handlers = handlers;
     this.root = document.createElement("div");
     this.root.className = "settings";
+    this.presetEditor = new BrightnessPresetEditor({
+      onSave: (mode, brightness) => {
+        const next = this.configPatchQueue.then(() => this.handlers.onSaveBrightnessPreset(mode, brightness));
+        this.configPatchQueue = next.then(() => undefined, () => undefined);
+        return next;
+      },
+      onApply: (mode) => this.handlers.onApplyBrightnessPreset(mode),
+      onToast: (message) => this.handlers.onToast?.(message),
+    });
   }
 
   /** 串行化配置写入，确保后一项基于前一项已落盘的最新配置合并。 */
@@ -281,41 +294,31 @@ export class SettingsView {
     cfg: NonNullable<ReturnType<typeof getState>["config"]>,
   ): void {
     const el = this.root.querySelector('[data-sec="presets"]') as HTMLElement;
-    for (const mode of ["day", "night"] as const) {
-      const count = Object.keys(cfg.brightnessPresets?.[mode] ?? {}).length;
-      const row = document.createElement("div");
-      row.className = "field preset-row";
-      row.innerHTML = `
-        <div>
-          <div class="field__label">${escapeHtml(t(`preset.${mode}`))}</div>
-          <div class="field__hint">${escapeHtml(count ? t("preset.savedCount", { n: count }) : t("preset.notSaved"))}</div>
-        </div>
-        <div class="preset-row__actions">
-          <button type="button" class="text-btn" data-save>${escapeHtml(t("preset.save"))}</button>
-          <button type="button" class="text-btn" data-apply ${count ? "" : "disabled"} aria-label="${escapeAttr(t("preset.applyAria", { mode: t(`preset.${mode}`) }))}">${escapeHtml(t("preset.apply"))}</button>
-        </div>
-      `;
-      const save = row.querySelector<HTMLButtonElement>("[data-save]")!;
-      const apply = row.querySelector<HTMLButtonElement>("[data-apply]")!;
-      const run = async (action: () => Promise<void>): Promise<void> => {
-        save.disabled = true;
-        apply.disabled = true;
-        try {
-          await action();
-        } finally {
-          save.disabled = false;
-          apply.disabled = !Object.keys(getState().config?.brightnessPresets?.[mode] ?? {}).length;
-        }
-      };
-      save.addEventListener("click", () => {
-        void run(() => {
-          const next = this.configPatchQueue.then(() => this.handlers.onSaveBrightnessPreset(mode));
-          this.configPatchQueue = next.catch(() => undefined);
-          return next;
-        });
-      });
-      apply.addEventListener("click", () => void run(() => this.handlers.onApplyBrightnessPreset(mode)));
-      el.appendChild(row);
+    const toggle = rowSwitch(t("preset.enabled"), cfg.brightnessPresetsEnabled === true, async (enabled) => {
+      try {
+        await this.queuePatchConfig({ brightnessPresetsEnabled: enabled });
+      } catch (error) {
+        this.handlers.onToast?.(error instanceof Error ? error.message : String(error));
+      } finally {
+        this.refreshBrightnessPresets();
+      }
+    });
+    this.presetSwitch = toggle.querySelector("button");
+    el.appendChild(toggle);
+    this.refreshBrightnessPresets();
+  }
+
+  /** 配置回写只更新模式区，保留当前滚动和正在操作的滑条节点。 */
+  refreshBrightnessPresets(): void {
+    const cfg = getState().config;
+    const el = this.root.querySelector('[data-sec="presets"]');
+    if (!cfg || !el) return;
+    this.presetSwitch?.setAttribute("aria-checked", String(cfg.brightnessPresetsEnabled === true));
+    if (cfg.brightnessPresetsEnabled === true) {
+      this.presetEditor.update(cfg, getState().monitors);
+      if (!el.contains(this.presetEditor.root)) el.appendChild(this.presetEditor.root);
+    } else {
+      this.presetEditor.root.remove();
     }
   }
 
