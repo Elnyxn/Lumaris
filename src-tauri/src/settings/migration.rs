@@ -48,10 +48,14 @@ mod tests {
             "schemaVersion": 1,
             "stepPercent": 10
         });
-        // 缺字段时应能用默认填充失败 → 完整对象更稳妥
-        let full = serde_json::to_value(AppConfig::default()).unwrap();
-        let cfg = migrate_config(full).unwrap();
+        let cfg = migrate_config(v).unwrap();
         assert_eq!(cfg.schema_version, 1);
-        let _ = v;
+        assert_eq!(cfg.step_percent, 10);
+        assert_eq!(cfg.hotkeys, AppConfig::default().hotkeys);
+    }
+
+    #[test]
+    fn invalid_field_types_still_fail() {
+        assert!(migrate_config(serde_json::json!({"stepPercent": "invalid"})).is_err());
     }
 }

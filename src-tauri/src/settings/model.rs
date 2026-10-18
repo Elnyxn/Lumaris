@@ -9,7 +9,7 @@ pub const MAX_MONITOR_ID_LEN: usize = 512;
 pub const MAX_MONITOR_ALIAS_LEN: usize = 80;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase")]
 pub struct AppConfig {
     pub schema_version: u32,
     pub hotkeys: HotkeyConfig,

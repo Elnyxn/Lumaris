@@ -90,7 +90,7 @@ jobs:
 
       - name: Test Rust (Windows MSVC)
         working-directory: src-tauri
-        run: cargo test --locked
+        run: cargo test --release --locked
 
       - name: Locate executable
         id: exe
