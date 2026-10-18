@@ -763,8 +763,14 @@ pub fn open_external_url(url: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn check_for_updates(force: Option<bool>) -> Result<crate::update::UpdateCheckResult, String> {
-    Ok(crate::update::check_for_updates(force.unwrap_or(false)))
+pub async fn check_for_updates(force: Option<bool>) -> Result<crate::update::UpdateCheckResult, String> {
+    // ureq performs blocking I/O. Keep the window message loop (including the
+    // low-level mouse hook) responsive while DNS/TLS/HTTP waits or times out.
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::update::check_for_updates(force.unwrap_or(false))
+    })
+    .await
+    .map_err(|error| format!("更新检查失败: {error}"))
 }
 
 #[derive(Debug, Serialize)]
