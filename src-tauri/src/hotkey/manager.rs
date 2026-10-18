@@ -4,9 +4,11 @@
 use super::model::{is_system_reserved, normalize_accelerator};
 use crate::error::{LumarisError, LumarisResult};
 use crate::settings::HotkeyConfig;
+use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::{self, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager, Runtime};
@@ -19,14 +21,21 @@ const REPEAT_TICK_MS: u64 = 20;
 
 pub struct HotkeyManager {
     registered: Mutex<HashMap<String, String>>,
+    event_tx: OnceCell<Sender<HotkeyInput>>,
     pub(crate) held: Mutex<Option<String>>,
     pub(crate) hold_gen: AtomicU64,
+}
+
+struct HotkeyInput {
+    action: String,
+    state: ShortcutState,
 }
 
 impl HotkeyManager {
     pub fn new() -> Self {
         Self {
             registered: Mutex::new(HashMap::new()),
+            event_tx: OnceCell::new(),
             held: Mutex::new(None),
             hold_gen: AtomicU64::new(0),
         }
@@ -84,36 +93,56 @@ impl HotkeyManager {
             .map_err(|e| LumarisError::hotkey(format!("快捷键语法无效: {e}")))?;
 
         let action_owned = action.to_string();
-        let repeatable = is_repeatable_action(action);
+        let tx = self.event_sender(app)?;
 
         app.global_shortcut()
-            .on_shortcut(shortcut, move |app, _shortcut, event| {
-                match event.state {
-                    ShortcutState::Pressed => {
-                        // 短按：1 个设置步长；mode=steps
-                        emit_hotkey(app, &action_owned, !repeatable, 1, false);
-                        if repeatable {
-                            start_hold_repeat(app, &action_owned);
-                        }
-                    }
-                    ShortcutState::Released => {
-                        if repeatable {
-                            stop_hold_repeat(app, &action_owned);
-                            emit_hotkey(app, &action_owned, true, 0, false);
-                        }
-                    }
-                }
+            .on_shortcut(shortcut, move |_app, _shortcut, event| {
+                // 插件持有快捷键表锁；这里不能发业务事件或同步等待 UI。
+                // 按下/松开统一排队，避免每次 spawn 导致顺序颠倒。
+                let _ = tx.send(HotkeyInput {
+                    action: action_owned.clone(),
+                    state: event.state,
+                });
             })
             .map_err(|e| {
-                LumarisError::hotkey(format!(
-                    "该快捷键可能已被系统或其他程序占用。({e})"
-                ))
+                LumarisError::hotkey(format!("该快捷键可能已被系统或其他程序占用。({e})"))
             })?;
 
         self.registered
             .lock()
             .insert(action.to_string(), normalized);
         Ok(())
+    }
+
+    fn event_sender<R: Runtime>(&self, app: &AppHandle<R>) -> LumarisResult<Sender<HotkeyInput>> {
+        self.event_tx
+            .get_or_try_init(|| {
+                let (tx, rx) = mpsc::channel::<HotkeyInput>();
+                let app = app.clone();
+                thread::Builder::new()
+                    .name("lumaris-hotkeys".into())
+                    .spawn(move || {
+                        while let Ok(input) = rx.recv() {
+                            let repeatable = is_repeatable_action(&input.action);
+                            match input.state {
+                                ShortcutState::Pressed => {
+                                    emit_hotkey(&app, &input.action, !repeatable, 1, false);
+                                    if repeatable {
+                                        start_hold_repeat(&app, &input.action);
+                                    }
+                                }
+                                ShortcutState::Released => {
+                                    if repeatable {
+                                        stop_hold_repeat(&app, &input.action);
+                                        emit_hotkey(&app, &input.action, true, 0, false);
+                                    }
+                                }
+                            }
+                        }
+                    })?;
+                Ok::<_, LumarisError>(tx)
+            })
+            .cloned()
     }
 
     pub fn update_action<R: Runtime>(
@@ -190,8 +219,8 @@ fn emit_hotkey<R: Runtime>(
 /// 按住时长 → 亮度变化速率（百分点/秒），二次加速，约 1.6s 顶到峰值
 fn hold_rate_pps(elapsed_ms: u64) -> f64 {
     let t = (elapsed_ms as f64 / 1600.0).clamp(0.0, 1.0);
-    let ease = t * t; // ease-in
-    // 起速 40%/s，峰值约 100%/s
+    // ease-in：起速 40%/s，峰值约 100%/s
+    let ease = t * t;
     40.0 + 60.0 * ease
 }
 

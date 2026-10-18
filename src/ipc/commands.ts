@@ -80,11 +80,14 @@ export async function selectPrevMonitor(): Promise<MonitorInfo | null> {
   return invoke("select_prev_monitor");
 }
 
-export async function showFlyout(page?: string): Promise<void> {
-  // 尺寸由后端固定，前端只传页面
+export async function showFlyout(page?: string, contentHeight?: number): Promise<void> {
   await invoke("show_flyout", {
-    args: { height: null, page: page ?? "flyout" },
+    args: { height: contentHeight ?? null, page: page ?? "flyout" },
   });
+}
+
+export async function resizeFlyout(contentHeight: number): Promise<void> {
+  await invoke("resize_flyout", { width: 360, height: contentHeight });
 }
 
 export async function hideFlyout(): Promise<void> {

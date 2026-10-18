@@ -19,6 +19,12 @@
   flex-shrink: 0;
 }
 
+/* 极小工作区中单屏的 SDR/对比度内容也保留真实溢出访问。 */
+.flyout--single {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
 .flyout__title {
   flex: 1;
   min-width: 0;

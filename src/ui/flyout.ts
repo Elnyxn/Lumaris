@@ -15,6 +15,7 @@ export interface FlyoutHandlers {
   onSettings: () => void;
   onSelect: (id: string) => void;
   onInteract: () => void;
+  onLayout: () => void;
   onDragState?: (dragging: boolean) => void;
 }
 
@@ -32,12 +33,44 @@ export class FlyoutView {
   private listSdrValueEls = new Map<string, HTMLElement>();
   private handlers: FlyoutHandlers;
   private boundId: string | null = null;
+  private layoutObserver: ResizeObserver;
 
   constructor(handlers: FlyoutHandlers) {
     this.handlers = handlers;
     this.root = document.createElement("div");
     this.root.className = "flyout";
     this.root.addEventListener("pointerdown", () => handlers.onInteract());
+    this.layoutObserver = new ResizeObserver(() => this.handlers.onLayout());
+  }
+
+  /** 与窗口当前高度无关：列表按实际行高求和，不能用会包含空白的 scrollHeight。 */
+  naturalHeight(): number {
+    if (!this.root.isConnected) return 0;
+    const outerHeight = (el: Element): number => {
+      const style = getComputedStyle(el);
+      return el.getBoundingClientRect().height +
+        parseFloat(style.marginTop || "0") + parseFloat(style.marginBottom || "0");
+    };
+    const children = [...this.root.children];
+    const style = getComputedStyle(this.root);
+    let height = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
+      parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth) +
+      Math.max(0, children.length - 1) * parseFloat(style.rowGap || "0");
+    for (const child of children) {
+      if (child.matches("[data-list]")) {
+        const rows = [...child.children];
+        const listStyle = getComputedStyle(child);
+        height += rows.reduce((sum, row) => sum + outerHeight(row), 0) +
+          Math.max(0, rows.length - 1) * parseFloat(listStyle.rowGap || "0");
+      } else {
+        height += outerHeight(child);
+      }
+    }
+    return Math.ceil(height);
+  }
+
+  destroy(): void {
+    this.layoutObserver.disconnect();
   }
 
   isDragging(): boolean {
@@ -62,11 +95,18 @@ export class FlyoutView {
     const step = cfg?.stepPercent || cfg?.customStepPercent || 5;
     // 多显示器：强制上下堆叠，不再左右切换
     const multi = st.monitors.length > 1;
+    this.root.classList.toggle("flyout--single", !multi);
     if (multi) {
       this.renderList(step);
     } else {
       this.renderSingle(step);
     }
+    this.layoutObserver.disconnect();
+    this.layoutObserver.observe(this.root);
+    // 字体加载、状态换行和 SDR 行都可能改变自然高度，即使窗口已达到上限。
+    this.root.querySelectorAll(".flyout__header, .flyout__body, .flyout__footer, .flyout-row")
+      .forEach((el) => this.layoutObserver.observe(el));
+    this.handlers.onLayout();
   }
 
   private renderSingle(step: number): void {

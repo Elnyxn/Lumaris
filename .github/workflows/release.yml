@@ -15,6 +15,10 @@ on:
         description: "可选：指定已有 tag（如 v1.0.1）；留空则打当前 commit 的 manual-run"
         required: false
         default: ""
+      publish:
+        description: "发布到 GitHub Release（关闭时只测试、构建并保存产物）"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -80,7 +84,11 @@ jobs:
 
       - name: Build Rust (release MSVC)
         working-directory: src-tauri
-        run: cargo build --release
+        run: cargo build --release --locked
+
+      - name: Test Rust (Windows MSVC)
+        working-directory: src-tauri
+        run: cargo test --locked
 
       - name: Locate executable
         id: exe
@@ -155,7 +163,18 @@ jobs:
           Get-Content "release\SHA256SUMS.txt"
           Get-ChildItem release | Format-Table Name, Length
 
+      - name: Save Windows packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lumaris-windows-${{ steps.ver.outputs.version }}
+          path: |
+            release/Lumaris-portable-${{ steps.ver.outputs.version }}.zip
+            release/Lumaris-Setup-${{ steps.ver.outputs.version }}.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+
       - name: Create GitHub Release
+        if: github.event_name == 'push' || inputs.publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh

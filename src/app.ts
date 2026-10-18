@@ -31,6 +31,8 @@ export class App {
   private dragging = false;
   private blurTimer: number | null = null;
   private destroyed = false;
+  private flyoutResizeFrame: number | null = null;
+  private lastFlyoutSizeKey = "";
 
   private readonly onPanelPointerEnter = (): void => {
     this.pointerInside = true;
@@ -109,6 +111,7 @@ export class App {
         void cmd.selectMonitor(id).then(() => cmd.getMonitors().then(setMonitors));
       },
       onInteract: () => this.resetHideTimer(),
+      onLayout: () => this.scheduleFlyoutResize(),
       onDragState: (d) => {
         this.dragging = d;
         if (d) this.clearHideTimer();
@@ -136,7 +139,7 @@ export class App {
           getState().page === "settings" &&
           prevShowContrast !== (cfg.showContrast === true)
         ) {
-          void cmd.showFlyout("settings");
+          void this.showWindow("settings");
         }
       },
       onSetHotkey: async (action, accel) => {
@@ -224,7 +227,7 @@ export class App {
             this.render();
           }
           // 刷新后按新台数重定位/定高
-          await cmd.showFlyout(getState().page || "flyout");
+          await this.showWindow(getState().page || "flyout");
           showToast(t("monitors.refreshed", { n: list.length }));
         } catch (e) {
           showToast(e instanceof Error ? e.message : String(e));
@@ -423,10 +426,10 @@ export class App {
     const mids = st.monitors
       .map(
         (m) =>
-          `${m.id}:${m.isSelected}:${m.status}:${m.userAlias ?? ""}:${m.isControllable}`,
+          `${m.id}:${m.isSelected}:${m.status}:${m.userAlias ?? ""}:${m.isControllable}:${m.sdrControllable}:${m.isPrimary}:${m.dpi}:${JSON.stringify(m.workArea)}`,
       )
       .join("|");
-    return `${st.page}|loc:${st.config?.locale ?? "zh-CN"}|${st.config?.layoutMode}|${mids}`;
+    return `${st.page}|loc:${st.config?.locale ?? "zh-CN"}|${st.config?.layoutMode}|${st.config?.showContrast}|${mids}`;
   }
 
   private render(): void {
@@ -441,7 +444,32 @@ export class App {
     } else {
       this.flyout.render();
       this.panel.appendChild(this.flyout.root);
+      this.scheduleFlyoutResize();
     }
+  }
+
+  private showWindow(page: PageId): Promise<void> {
+    const height = page === "flyout" ? this.flyout.naturalHeight() : 0;
+    // 首次显示前就提交实际高度；后续后端定位复用测量值，避免估算和测量来回抢尺寸。
+    return cmd.showFlyout(page, height > 0 ? height : undefined);
+  }
+
+  private scheduleFlyoutResize(): void {
+    if (this.destroyed || this.flyoutResizeFrame !== null) return;
+    this.flyoutResizeFrame = window.requestAnimationFrame(() => {
+      this.flyoutResizeFrame = null;
+      if (getState().page !== "flyout" || !this.flyout.root.isConnected) return;
+      const height = this.flyout.naturalHeight();
+      if (height <= 0) return;
+      const primary = getState().monitors.find((m) => m.isPrimary);
+      const key = JSON.stringify([height, primary?.dpi, primary?.workArea]);
+      if (key === this.lastFlyoutSizeKey) return;
+      this.lastFlyoutSizeKey = key;
+      void cmd.resizeFlyout(height).catch((error) => {
+        if (this.lastFlyoutSizeKey === key) this.lastFlyoutSizeKey = "";
+        console.warn("调整浮窗高度失败", error);
+      });
+    });
   }
 
   private applyUiTokens(): void {
@@ -484,7 +512,7 @@ export class App {
     if (forceShow || !getState().visible) {
       await this.show();
     } else {
-      await cmd.showFlyout(page);
+      await this.showWindow(page);
       if (page === "settings") this.clearHideTimer();
       else this.resetHideTimer();
     }
@@ -507,7 +535,7 @@ export class App {
     }
 
     // 无入场位移动画：只定位一次再显示
-    await cmd.showFlyout(page);
+    await this.showWindow(page);
     patch({ visible: true });
     // 不再二次 render / 不再 anim-show
 
@@ -578,7 +606,7 @@ export class App {
       }
 
       // 2) 内容就绪后再 show（已显示则 commands 直接 return）
-      await cmd.showFlyout("flyout");
+      await this.showWindow("flyout");
       this.withSuppressedRender(() => patch({ visible: true }));
       this.lastRenderKey = this.renderKey();
       this.resetHideTimer();
@@ -623,6 +651,10 @@ export class App {
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    if (this.flyoutResizeFrame !== null) {
+      window.cancelAnimationFrame(this.flyoutResizeFrame);
+      this.flyoutResizeFrame = null;
+    }
     this.clearHideTimer();
     if (this.blurTimer !== null) {
       window.clearTimeout(this.blurTimer);
@@ -634,6 +666,7 @@ export class App {
     window.removeEventListener("blur", this.onWindowBlur);
     for (const unsubscribe of this.unsubs.splice(0)) unsubscribe();
     this.settings.destroy();
+    this.flyout.destroy();
     this.panel.replaceChildren();
     this.panel.remove();
   }

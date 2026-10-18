@@ -320,7 +320,7 @@ pub fn select_prev_monitor(state: State<AppState>) -> Result<Option<crate::monit
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowFlyoutArgs {
-    /// 忽略旧客户端的 height，尺寸只由 page 决定
+    /// 浮窗 DOM 自然高度（逻辑像素），最终高度仍由后端工作区上限决定。
     pub height: Option<f64>,
     pub page: Option<String>,
 }
@@ -356,6 +356,13 @@ pub fn show_flyout(
     let sdr_count = monitors.iter().filter(|m| m.sdr_controllable).count();
     // 对比度仅单屏生效；多屏堆叠不加高度
     let show_c = state.config.read().show_contrast && mon_count <= 1;
+    if page != "settings" {
+        if let Some(height) = args.height {
+            crate::window::positioning::set_flyout_content_height(
+                height, show_c, mon_count, sdr_count,
+            )?;
+        }
+    }
 
     let _ = win.set_ignore_cursor_events(false);
 
@@ -389,33 +396,40 @@ pub fn hide_flyout(app: AppHandle, state: State<AppState>) -> Result<(), String>
     Ok(())
 }
 
-/// 仅按页面切换固定尺寸（不再接受任意宽高）
+/// 接受浮窗 DOM 自然高度；后端固定宽度，并按目标主屏工作区限制高度。
 #[tauri::command]
 pub fn resize_flyout(
     app: AppHandle,
+    state: State<AppState>,
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    // 兼容旧前端调用：忽略传入宽高，按当前可见页面语义固定
-    let _ = (width, height);
+    let _ = width;
+    // 测量通知可能晚于页面切换到达，禁止把设置页缩回浮窗大小。
+    if state.current_page() == "settings" {
+        return Ok(());
+    }
     let win = app
         .get_webview_window("main")
         .ok_or_else(|| "主窗口不存在".to_string())?;
-    // 无法可靠知前端 page 时保持 flyout 尺寸，避免乱跳
-    let (show_contrast, mon_count, sdr_count) = app
-        .try_state::<AppState>()
-        .map(|s| {
-            let monitors = s.monitors.list();
-            let n = monitors.len();
-            (
-                s.config.read().show_contrast && n <= 1,
-                n,
-                monitors.iter().filter(|m| m.sdr_controllable).count(),
-            )
-        })
-        .unwrap_or((false, 1, 0));
-    apply_fixed_size(&win, Some("flyout"), show_contrast, mon_count, sdr_count)
-        .map_err(|e| e.to_string())?;
+    let monitors = state.monitors.list();
+    let mon_count = monitors.len();
+    let sdr_count = monitors.iter().filter(|m| m.sdr_controllable).count();
+    let show_contrast = state.config.read().show_contrast && mon_count <= 1;
+    crate::window::positioning::set_flyout_content_height(
+        height, show_contrast, mon_count, sdr_count,
+    )?;
+    let (work, dpi) = monitors
+        .iter()
+        .find(|m| m.is_primary)
+        .map(|m| (m.work_area.clone(), m.dpi))
+        .unwrap_or_else(|| {
+            (crate::platform::primary_work_area(), crate::platform::primary_dpi())
+        });
+    position_flyout(
+        &win, &work, Some("flyout"), dpi, show_contrast, mon_count, sdr_count,
+    )
+    .map_err(|e| e.to_string())?;
     let _ = win.set_ignore_cursor_events(false);
     Ok(())
 }
