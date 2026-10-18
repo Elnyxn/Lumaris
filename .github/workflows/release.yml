@@ -41,6 +41,8 @@ jobs:
         run: |
           $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ inputs.tag }}") {
             "${{ inputs.tag }}"
+          } elseif ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ inputs.publish }}" -eq "false") {
+            "v$((Get-Content package.json -Raw | ConvertFrom-Json).version)"
           } else {
             "${{ github.ref_name }}"
           }

@@ -9,6 +9,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Sender};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager, Runtime};
@@ -22,6 +23,7 @@ const REPEAT_TICK_MS: u64 = 20;
 pub struct HotkeyManager {
     registered: Mutex<HashMap<String, String>>,
     event_tx: OnceCell<Sender<HotkeyInput>>,
+    event_epoch: Arc<AtomicU64>,
     pub(crate) held: Mutex<Option<String>>,
     pub(crate) hold_gen: AtomicU64,
 }
@@ -29,6 +31,7 @@ pub struct HotkeyManager {
 struct HotkeyInput {
     action: String,
     state: ShortcutState,
+    epoch: u64,
 }
 
 impl HotkeyManager {
@@ -36,6 +39,7 @@ impl HotkeyManager {
         Self {
             registered: Mutex::new(HashMap::new()),
             event_tx: OnceCell::new(),
+            event_epoch: Arc::new(AtomicU64::new(0)),
             held: Mutex::new(None),
             hold_gen: AtomicU64::new(0),
         }
@@ -53,6 +57,8 @@ impl HotkeyManager {
                 let _ = app.global_shortcut().unregister(shortcut);
             }
         }
+        // 注销期间已派发的回调也必须失效，不能在注销后重新启动连发。
+        self.stop_hold();
     }
 
     pub fn register_all<R: Runtime>(
@@ -94,6 +100,7 @@ impl HotkeyManager {
 
         let action_owned = action.to_string();
         let tx = self.event_sender(app)?;
+        let epoch = self.event_epoch.clone();
 
         app.global_shortcut()
             .on_shortcut(shortcut, move |_app, _shortcut, event| {
@@ -102,6 +109,7 @@ impl HotkeyManager {
                 let _ = tx.send(HotkeyInput {
                     action: action_owned.clone(),
                     state: event.state,
+                    epoch: epoch.load(Ordering::SeqCst),
                 });
             })
             .map_err(|e| {
@@ -119,21 +127,27 @@ impl HotkeyManager {
             .get_or_try_init(|| {
                 let (tx, rx) = mpsc::channel::<HotkeyInput>();
                 let app = app.clone();
+                let epoch = self.event_epoch.clone();
                 thread::Builder::new()
                     .name("lumaris-hotkeys".into())
                     .spawn(move || {
                         while let Ok(input) = rx.recv() {
+                            if input.epoch != epoch.load(Ordering::SeqCst) {
+                                continue;
+                            }
                             let repeatable = is_repeatable_action(&input.action);
                             match input.state {
                                 ShortcutState::Pressed => {
                                     emit_hotkey(&app, &input.action, !repeatable, 1, false);
                                     if repeatable {
-                                        start_hold_repeat(&app, &input.action);
+                                        start_hold_repeat(&app, &input.action, input.epoch);
                                     }
                                 }
                                 ShortcutState::Released => {
                                     if repeatable {
-                                        stop_hold_repeat(&app, &input.action);
+                                        app.state::<crate::state::AppState>()
+                                            .hotkeys
+                                            .end_hold(&input.action, input.epoch);
                                         emit_hotkey(&app, &input.action, true, 0, false);
                                     }
                                 }
@@ -158,6 +172,7 @@ impl HotkeyManager {
                 let _ = app.global_shortcut().unregister(sc);
             }
             self.registered.lock().remove(action);
+            self.stop_hold();
         }
 
         let Some(accel) = new_accel.map(str::trim).filter(|s| !s.is_empty()) else {
@@ -178,8 +193,28 @@ impl HotkeyManager {
     }
 
     fn stop_hold(&self) {
+        let mut held = self.held.lock();
+        self.event_epoch.fetch_add(1, Ordering::SeqCst);
         self.hold_gen.fetch_add(1, Ordering::SeqCst);
-        *self.held.lock() = None;
+        *held = None;
+    }
+
+    fn begin_hold(&self, action: &str, epoch: u64) -> Option<u64> {
+        let mut held = self.held.lock();
+        if epoch != self.event_epoch.load(Ordering::SeqCst) {
+            return None;
+        }
+        let gen = self.hold_gen.fetch_add(1, Ordering::SeqCst) + 1;
+        *held = Some(action.to_string());
+        Some(gen)
+    }
+
+    fn end_hold(&self, action: &str, epoch: u64) {
+        let mut held = self.held.lock();
+        if epoch == self.event_epoch.load(Ordering::SeqCst) && held.as_deref() == Some(action) {
+            *held = None;
+            self.hold_gen.fetch_add(1, Ordering::SeqCst);
+        }
     }
 }
 
@@ -224,10 +259,11 @@ fn hold_rate_pps(elapsed_ms: u64) -> f64 {
     40.0 + 60.0 * ease
 }
 
-fn start_hold_repeat<R: Runtime>(app: &AppHandle<R>, action: &str) {
+fn start_hold_repeat<R: Runtime>(app: &AppHandle<R>, action: &str, epoch: u64) {
     let state = app.state::<crate::state::AppState>();
-    let gen = state.hotkeys.hold_gen.fetch_add(1, Ordering::SeqCst) + 1;
-    *state.hotkeys.held.lock() = Some(action.to_string());
+    let Some(gen) = state.hotkeys.begin_hold(action, epoch) else {
+        return;
+    };
 
     let app = app.clone();
     let action = action.to_string();
@@ -264,11 +300,30 @@ fn start_hold_repeat<R: Runtime>(app: &AppHandle<R>, action: &str) {
         .ok();
 }
 
-fn stop_hold_repeat<R: Runtime>(app: &AppHandle<R>, action: &str) {
-    let state = app.state::<crate::state::AppState>();
-    let mut held = state.hotkeys.held.lock();
-    if held.as_deref() == Some(action) {
-        *held = None;
-        state.hotkeys.hold_gen.fetch_add(1, Ordering::SeqCst);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn queued_press_cannot_restart_repeat_after_unregistration() {
+        let manager = HotkeyManager::new();
+        let epoch = manager.event_epoch.load(Ordering::SeqCst);
+        assert!(manager.begin_hold("increase", epoch).is_some());
+        manager.stop_hold();
+        assert!(manager.begin_hold("increase", epoch).is_none());
+        assert!(manager.held.lock().is_none());
+    }
+
+    #[test]
+    fn stale_release_cannot_stop_a_new_registration_hold() {
+        let manager = HotkeyManager::new();
+        let old = manager.event_epoch.load(Ordering::SeqCst);
+        manager.stop_hold();
+        let current = manager.event_epoch.load(Ordering::SeqCst);
+        assert!(manager.begin_hold("increase", current).is_some());
+        manager.end_hold("increase", old);
+        assert_eq!(manager.held.lock().as_deref(), Some("increase"));
+        manager.end_hold("increase", current);
+        assert!(manager.held.lock().is_none());
     }
 }
