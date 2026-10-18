@@ -99,9 +99,9 @@ impl AppState {
 
     pub fn save_now(&self) {
         *self.save_deadline.write() = None;
-        let cfg = self.config.read().clone();
-        // 同步缓存亮度
-        let mut cfg = cfg;
+        // Serialize persistence with settings/preset edits; an old snapshot must
+        // not overwrite a mode saved while the idle thread is flushing caches.
+        let mut cfg = self.config.write();
         for m in self.monitors.list() {
             cfg.cached_brightness
                 .insert(m.id.clone(), m.cached_brightness);
@@ -111,7 +111,6 @@ impl AppState {
         if let Err(e) = save_config(&cfg) {
             tracing::error!(error = %e, "保存配置失败");
         } else {
-            *self.config.write() = cfg;
             tracing::debug!("配置已保存");
         }
     }

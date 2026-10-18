@@ -131,6 +131,24 @@
   padding: 0;
 }
 
+.flyout__presets {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.flyout__preset {
+  padding: 4px 7px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.flyout__preset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* 多显示器上下堆叠 */
 .flyout-list-host,
 .flyout-list {

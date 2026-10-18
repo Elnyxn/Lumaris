@@ -71,6 +71,8 @@ pub fn run() {
             commands::resize_flyout,
             commands::get_config,
             commands::update_config,
+            commands::presets::save_brightness_preset,
+            commands::presets::apply_brightness_preset,
             commands::set_monitor_alias,
             commands::set_monitor_sync_include,
             commands::set_hotkey,
@@ -306,6 +308,7 @@ pub fn run() {
                                 )
                             });
                         let show_c = st.config.read().show_contrast && mon_count <= 1;
+                        let max_height_percent = st.config.read().flyout_max_height_percent;
                         let page = st.current_page();
                         let _ = crate::window::position_flyout(
                             &win,
@@ -315,6 +318,7 @@ pub fn run() {
                             show_c,
                             mon_count,
                             sdr_count,
+                            max_height_percent,
                         );
                         let _ = win.set_ignore_cursor_events(false);
                         let _ = win.show();
@@ -404,6 +408,7 @@ fn handle_worker_event(app: &tauri::AppHandle, ev: WorkerEvent) {
                         let mon_count = list.len();
                         let sdr_count = list.iter().filter(|m| m.sdr_controllable).count();
                         let show_c = state.config.read().show_contrast && mon_count <= 1;
+                        let max_height_percent = state.config.read().flyout_max_height_percent;
                         let page = state.current_page();
                         let _ = crate::window::position_flyout(
                             &win,
@@ -413,6 +418,7 @@ fn handle_worker_event(app: &tauri::AppHandle, ev: WorkerEvent) {
                             show_c,
                             mon_count,
                             sdr_count,
+                            max_height_percent,
                         );
                     }
                 }

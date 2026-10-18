@@ -6,6 +6,7 @@ import {
   hotkeyActionToRust,
   monitorLabel,
   statusLabel,
+  type BrightnessPresetMode,
   type HotkeyConfig,
   type TargetMode,
 } from "../state/types";
@@ -21,6 +22,8 @@ const GITHUB_DISPLAY = "github.com/Elnyxn/Lumaris";
 export interface SettingsHandlers {
   onBack: () => void;
   onPatchConfig: (patch: Record<string, unknown>) => Promise<void>;
+  onSaveBrightnessPreset: (mode: BrightnessPresetMode) => Promise<void>;
+  onApplyBrightnessPreset: (mode: BrightnessPresetMode) => Promise<void>;
   onSetHotkey: (action: string, accel: string | null) => Promise<string | null>;
   onResetHotkeys: () => Promise<void>;
   onSetAutostart: (enabled: boolean) => Promise<void>;
@@ -80,6 +83,10 @@ export class SettingsView {
           <div class="settings__card" data-sec="brightness"></div>
         </section>
         <section class="settings__section">
+          <div class="settings__section-title">${escapeHtml(t("settings.brightnessPresets"))}</div>
+          <div class="settings__card" data-sec="presets"></div>
+        </section>
+        <section class="settings__section">
           <div class="settings__section-title">${escapeHtml(t("settings.hotkeys"))}</div>
           <div class="settings__card" data-sec="hotkeys"></div>
         </section>
@@ -115,6 +122,7 @@ export class SettingsView {
 
     this.fillGeneral(cfg);
     this.fillBrightness(cfg);
+    this.fillBrightnessPresets(cfg);
     this.fillHotkeys(cfg.hotkeys);
     this.fillMonitors();
     this.fillUi(cfg);
@@ -269,6 +277,48 @@ export class SettingsView {
     el.appendChild(reset);
   }
 
+  private fillBrightnessPresets(
+    cfg: NonNullable<ReturnType<typeof getState>["config"]>,
+  ): void {
+    const el = this.root.querySelector('[data-sec="presets"]') as HTMLElement;
+    for (const mode of ["day", "night"] as const) {
+      const count = Object.keys(cfg.brightnessPresets?.[mode] ?? {}).length;
+      const row = document.createElement("div");
+      row.className = "field preset-row";
+      row.innerHTML = `
+        <div>
+          <div class="field__label">${escapeHtml(t(`preset.${mode}`))}</div>
+          <div class="field__hint">${escapeHtml(count ? t("preset.savedCount", { n: count }) : t("preset.notSaved"))}</div>
+        </div>
+        <div class="preset-row__actions">
+          <button type="button" class="text-btn" data-save>${escapeHtml(t("preset.save"))}</button>
+          <button type="button" class="text-btn" data-apply ${count ? "" : "disabled"} aria-label="${escapeAttr(t("preset.applyAria", { mode: t(`preset.${mode}`) }))}">${escapeHtml(t("preset.apply"))}</button>
+        </div>
+      `;
+      const save = row.querySelector<HTMLButtonElement>("[data-save]")!;
+      const apply = row.querySelector<HTMLButtonElement>("[data-apply]")!;
+      const run = async (action: () => Promise<void>): Promise<void> => {
+        save.disabled = true;
+        apply.disabled = true;
+        try {
+          await action();
+        } finally {
+          save.disabled = false;
+          apply.disabled = !Object.keys(getState().config?.brightnessPresets?.[mode] ?? {}).length;
+        }
+      };
+      save.addEventListener("click", () => {
+        void run(() => {
+          const next = this.configPatchQueue.then(() => this.handlers.onSaveBrightnessPreset(mode));
+          this.configPatchQueue = next.catch(() => undefined);
+          return next;
+        });
+      });
+      apply.addEventListener("click", () => void run(() => this.handlers.onApplyBrightnessPreset(mode)));
+      el.appendChild(row);
+    }
+  }
+
   private fillMonitors(): void {
     const el = this.root.querySelector('[data-sec="monitors"]') as HTMLElement;
     const monitors = getState().monitors;
@@ -403,6 +453,28 @@ export class SettingsView {
       });
     });
     el.appendChild(op);
+
+    const heightField = document.createElement("div");
+    heightField.className = "field";
+    heightField.innerHTML = `
+      <div>
+        <div class="field__label">${escapeHtml(t("ui.flyoutMaxHeight"))}</div>
+        <div class="field__hint">${escapeHtml(t("ui.flyoutMaxHeightHint"))}</div>
+      </div>
+      <label class="settings__percent-input">
+        <input class="input" type="number" min="20" max="100" step="1" value="${cfg.flyoutMaxHeightPercent ?? 50}" aria-label="${escapeAttr(t("ui.flyoutMaxHeight"))}" />
+        <span aria-hidden="true">%</span>
+      </label>
+    `;
+    heightField.querySelector("input")!.addEventListener("change", (e) => {
+      const input = e.target as HTMLInputElement;
+      const value = input.valueAsNumber;
+      const current = getState().config?.flyoutMaxHeightPercent ?? 50;
+      const next = Number.isFinite(value) ? Math.min(100, Math.max(20, Math.round(value))) : current;
+      input.value = String(next);
+      if (next !== current) void this.queuePatchConfig({ flyoutMaxHeightPercent: next });
+    });
+    el.appendChild(heightField);
   }
 
   private fillAdvanced(

@@ -71,13 +71,23 @@ fn dpi_scale(dpi: u32) -> f64 {
 }
 
 /// 工作区是物理像素；上限针对整个浮窗，先换算成目标屏的逻辑像素。
-fn constrained_height(height: f64, work: &WorkArea, dpi: u32, settings: bool) -> f64 {
+fn constrained_height(
+    height: f64,
+    work: &WorkArea,
+    dpi: u32,
+    settings: bool,
+    max_percent: u32,
+) -> f64 {
     let scale = dpi_scale(dpi);
     let available = f64::from(work.height().max(1));
+    let inside_margins = (available - 2.0 * MARGIN_LOGICAL * scale).floor().max(1.0);
     let max_physical = if settings {
-        (available - 2.0 * MARGIN_LOGICAL * scale).max(1.0)
+        inside_margins
     } else {
-        (available * 0.5).floor().max(1.0)
+        (available * f64::from(max_percent.clamp(20, 100)) / 100.0)
+            .floor()
+            .max(1.0)
+            .min(inside_margins)
     };
     // 内容先向上取整到物理像素，再限高，避免分数 DPI 少一截而出现假滚动条。
     (height * scale).ceil().min(max_physical) / scale
@@ -113,12 +123,19 @@ pub fn position_flyout<R: Runtime>(
     show_contrast: bool,
     monitor_count: usize,
     sdr_count: usize,
+    max_height_percent: u32,
 ) -> tauri::Result<()> {
     let (width_logical, height_logical) =
         size_for_page(page, show_contrast, monitor_count, sdr_count);
     // 使用目标屏（主屏）DPI，不用窗口当前 scale（窗口可能还在副屏上）
     let scale = dpi_scale(dpi);
-    let height_logical = constrained_height(height_logical, work, dpi, page == Some("settings"));
+    let height_logical = constrained_height(
+        height_logical,
+        work,
+        dpi,
+        page == Some("settings"),
+        max_height_percent,
+    );
 
     let width_phys = (width_logical * scale).round() as u32;
     let height_phys = (height_logical * scale).round() as u32;
@@ -161,6 +178,7 @@ pub fn apply_fixed_size<R: Runtime>(
     show_contrast: bool,
     monitor_count: usize,
     sdr_count: usize,
+    max_height_percent: u32,
 ) -> tauri::Result<()> {
     let (w, h) = size_for_page(page, show_contrast, monitor_count, sdr_count);
     let h = constrained_height(
@@ -168,6 +186,7 @@ pub fn apply_fixed_size<R: Runtime>(
         &crate::platform::primary_work_area(),
         crate::platform::primary_dpi(),
         page == Some("settings"),
+        max_height_percent,
     );
     window.set_size(LogicalSize::new(w, h))?;
     Ok(())
@@ -201,12 +220,15 @@ mod tests {
             bottom: 2080,
         };
         // 200% DPI: 2080 physical => 1040 logical => 520 logical cap.
-        assert_eq!(constrained_height(326.0, &work, 192, false), 326.0);
-        assert_eq!(constrained_height(520.0, &work, 192, false), 520.0);
-        assert_eq!(constrained_height(900.0, &work, 192, false), 520.0);
-        assert_eq!(constrained_height(900.0, &work, 96, false), 900.0);
+        assert_eq!(constrained_height(326.0, &work, 192, false, 50), 326.0);
+        assert_eq!(constrained_height(520.0, &work, 192, false, 50), 520.0);
+        assert_eq!(constrained_height(900.0, &work, 192, false, 50), 520.0);
+        assert_eq!(constrained_height(900.0, &work, 96, false, 50), 900.0);
         // Settings keep their separate height policy.
-        assert_eq!(constrained_height(SETTINGS_HEIGHT, &work, 192, true), 520.0);
+        assert_eq!(
+            constrained_height(SETTINGS_HEIGHT, &work, 192, true, 50),
+            520.0
+        );
     }
 
     #[test]
@@ -217,9 +239,9 @@ mod tests {
             right: 0,
             bottom: 1301,
         };
-        let h = constrained_height(2000.0, &work, 144, false);
+        let h = constrained_height(2000.0, &work, 144, false, 50);
         assert_eq!((h * 1.5).round() as u32, 700);
-        assert_eq!(constrained_height(300.0, &work, 0, false), 300.0);
+        assert_eq!(constrained_height(300.0, &work, 0, false, 50), 300.0);
     }
 
     #[test]
@@ -231,10 +253,41 @@ mod tests {
             bottom: 1401,
         };
         let scale = dpi_scale(130);
-        let content = constrained_height(235.0, &work, 130, false);
+        let content = constrained_height(235.0, &work, 130, false, 50);
         assert_eq!((content * scale).round() as u32, 319);
         assert!(content >= 235.0);
-        let capped = constrained_height(2000.0, &work, 130, false);
+        let capped = constrained_height(2000.0, &work, 130, false, 50);
         assert_eq!((capped * scale).round() as u32, 700);
+    }
+
+    #[test]
+    fn custom_limits_apply_in_physical_pixels_and_keep_screen_margins() {
+        let work = WorkArea {
+            left: 0,
+            top: 0,
+            right: 2560,
+            bottom: 1400,
+        };
+        let scale = dpi_scale(192);
+        assert_eq!(
+            constrained_height(2000.0, &work, 192, false, 25) * scale,
+            350.0
+        );
+        assert_eq!(
+            constrained_height(2000.0, &work, 192, false, 70) * scale,
+            980.0
+        );
+        assert_eq!(
+            constrained_height(2000.0, &work, 192, false, 100) * scale,
+            1352.0
+        );
+        assert_eq!(
+            constrained_height(2000.0, &work, 192, false, 0) * scale,
+            280.0
+        );
+        assert_eq!(
+            constrained_height(2000.0, &work, 192, true, 25) * scale,
+            1352.0
+        );
     }
 }

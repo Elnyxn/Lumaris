@@ -39,6 +39,7 @@
 | 🔆 | **Precise brightness** | External displays via DDC/CI (VCP 0x10) / standard brightness API; laptop panels via WMI/ACPI backlight |
 | ☀️ | **SDR content brightness** | Per-display control while HDR is active; shown only when supported |
 | 🖥️ | **Multi-monitor** | Vertical stack layout; sync / independent / fixed targets |
+| 🌓 | **Brightness memory** | Save per-display Day / Night levels and restore them from the flyout |
 | ⌨️ | **Global hotkeys** | Fully customizable; hold-to-accelerate curve; tap uses configured step |
 | 🖱️ | **Tray scroll** | Hover the tray icon and scroll to adjust — no window required |
 | 🎨 | **Fluent UI** | Dark / light themes aligned with Windows 11 flyouts |
@@ -89,6 +90,14 @@ Checksums ship as `SHA256SUMS.txt` on the release page.
 2. Find the **Lumaris** tray icon  
 3. **Click** the tray icon to open the flyout; **hover + scroll** to change brightness  
 4. Open settings (gear) for hotkeys, theme, language, monitor aliases  
+
+### Day / Night modes
+
+Adjust each display to your daytime brightness, then choose **Settings → Brightness modes → Day → Save current**. Repeat for Night. Use the **Day** or **Night** button in the flyout footer to switch. Levels are stored by display identity, survive restarts, and retain temporarily disconnected displays.
+
+**Settings → Interface → Flyout scroll threshold** lets you choose 20–100% of the primary display's usable height (default: 50%). Scrolling appears only when the content exceeds that limit.
+
+If Windows assigns a different display identity after a port change or display renumbering, save the modes again.
 
 ### Default hotkeys (editable)
 

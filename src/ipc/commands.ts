@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   AppConfig,
   AppSnapshot,
+  BrightnessPresetMode,
   HotkeyConfig,
   MonitorInfo,
   OperationResultEvent,
@@ -96,6 +97,17 @@ export async function hideFlyout(): Promise<void> {
 
 export async function getConfig(): Promise<AppConfig> {
   return invoke("get_config");
+}
+
+export async function saveBrightnessPreset(mode: BrightnessPresetMode): Promise<AppConfig> {
+  return invoke("save_brightness_preset", { mode });
+}
+
+export async function applyBrightnessPreset(mode: BrightnessPresetMode): Promise<{
+  queued: number;
+  unavailable: number;
+}> {
+  return invoke("apply_brightness_preset", { mode });
 }
 
 export async function updateConfig(

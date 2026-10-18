@@ -8,6 +8,36 @@ pub const MAX_MONITOR_CONFIG_ENTRIES: usize = 64;
 pub const MAX_MONITOR_ID_LEN: usize = 512;
 pub const MAX_MONITOR_ALIAS_LEN: usize = 80;
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum BrightnessPresetMode {
+    Day,
+    Night,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(default, rename_all = "camelCase")]
+pub struct BrightnessPresets {
+    pub day: HashMap<String, u32>,
+    pub night: HashMap<String, u32>,
+}
+
+impl BrightnessPresets {
+    pub fn get(&self, mode: BrightnessPresetMode) -> &HashMap<String, u32> {
+        match mode {
+            BrightnessPresetMode::Day => &self.day,
+            BrightnessPresetMode::Night => &self.night,
+        }
+    }
+
+    pub fn get_mut(&mut self, mode: BrightnessPresetMode) -> &mut HashMap<String, u32> {
+        match mode {
+            BrightnessPresetMode::Day => &mut self.day,
+            BrightnessPresetMode::Night => &mut self.night,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, rename_all = "camelCase")]
 pub struct AppConfig {
@@ -31,6 +61,8 @@ pub struct AppConfig {
     /// 首屏浮窗是否显示对比度滑块
     #[serde(default)]
     pub show_contrast: bool,
+    pub brightness_presets: BrightnessPresets,
+    pub flyout_max_height_percent: u32,
     /// UI 语言：zh-CN | en
     #[serde(default = "default_locale")]
     pub locale: String,
@@ -63,6 +95,8 @@ impl Default for AppConfig {
             remember_last_monitor: true,
             read_brightness_on_start: true,
             show_contrast: false,
+            brightness_presets: BrightnessPresets::default(),
+            flyout_max_height_percent: 50,
             locale: default_locale(),
             monitor_aliases: HashMap::new(),
             monitor_sync_include: HashMap::new(),
@@ -94,6 +128,7 @@ impl AppConfig {
             _ => 5,
         };
         self.custom_step_percent = self.custom_step_percent.clamp(1, 25);
+        self.flyout_max_height_percent = self.flyout_max_height_percent.clamp(20, 100);
         self.delayed_init_ms = self.delayed_init_ms.clamp(500, 15_000);
         self.osd.auto_hide_ms = self.osd.auto_hide_ms.clamp(500, 10_000);
         self.ui.opacity = self.ui.opacity.clamp(0.5, 1.0);
@@ -110,6 +145,8 @@ impl AppConfig {
         sanitize_aliases(&mut self.monitor_aliases);
         sanitize_percent_cache(&mut self.cached_brightness);
         sanitize_percent_cache(&mut self.cached_contrast);
+        sanitize_percent_cache(&mut self.brightness_presets.day);
+        sanitize_percent_cache(&mut self.brightness_presets.night);
         sanitize_monitor_map(&mut self.monitor_sync_include);
     }
 }

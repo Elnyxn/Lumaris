@@ -56,6 +56,32 @@
   padding: 4px 12px;
 }
 
+.preset-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.preset-row__actions .text-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.settings__percent-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.settings__percent-input .input {
+  width: 66px;
+  min-width: 0;
+}
+
 .hotkey-row {
   display: grid;
   grid-template-columns: 1fr auto;

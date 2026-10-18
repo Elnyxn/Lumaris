@@ -58,4 +58,29 @@ mod tests {
     fn invalid_field_types_still_fail() {
         assert!(migrate_config(serde_json::json!({"stepPercent": "invalid"})).is_err());
     }
+
+    #[test]
+    fn legacy_settings_gain_empty_modes_and_default_height_without_reset() {
+        let mut cfg = migrate_config(serde_json::json!({
+            "schemaVersion": 1, "stepPercent": 10,
+            "cachedBrightness": {"a": 73},
+            "brightnessPresets": {"day": {"a": 130, "": 50}, "night": {"a": 25}},
+            "flyoutMaxHeightPercent": 150
+        }))
+        .unwrap();
+        cfg.validate_mut();
+        assert_eq!(cfg.step_percent, 10);
+        assert_eq!(cfg.cached_brightness["a"], 73);
+        assert_eq!(cfg.brightness_presets.day["a"], 100);
+        assert!(!cfg.brightness_presets.day.contains_key(""));
+        assert_eq!(cfg.brightness_presets.night["a"], 25);
+        assert_eq!(cfg.flyout_max_height_percent, 100);
+        let old =
+            migrate_config(serde_json::json!({"schemaVersion": 1, "stepPercent": 10})).unwrap();
+        assert_eq!(old.flyout_max_height_percent, 50);
+        assert!(old.brightness_presets.day.is_empty());
+        assert!(old.brightness_presets.night.is_empty());
+        let roundtrip = migrate_config(serde_json::to_value(&cfg).unwrap()).unwrap();
+        assert_eq!(roundtrip.brightness_presets, cfg.brightness_presets);
+    }
 }

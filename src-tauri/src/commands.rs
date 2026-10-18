@@ -1,5 +1,7 @@
 //! Tauri 命令：前端唯一 IPC 入口
 
+pub mod presets;
+
 use crate::events::{self, BrightnessChangedEvent, OperationResultEvent};
 use crate::hotkey::normalize_accelerator;
 use crate::settings::{
@@ -356,6 +358,7 @@ pub fn show_flyout(
     let sdr_count = monitors.iter().filter(|m| m.sdr_controllable).count();
     // 对比度仅单屏生效；多屏堆叠不加高度
     let show_c = state.config.read().show_contrast && mon_count <= 1;
+    let max_height_percent = state.config.read().flyout_max_height_percent;
     if page != "settings" {
         if let Some(height) = args.height {
             crate::window::positioning::set_flyout_content_height(
@@ -367,9 +370,9 @@ pub fn show_flyout(
     let _ = win.set_ignore_cursor_events(false);
 
     // 始终按 page 定尺寸（flyout ↔ settings 高度不同）；禁止“已显示就跳过”导致设置页锁死在浮窗高度
-    if let Err(e) = position_flyout(&win, &work, Some(page), dpi, show_c, mon_count, sdr_count) {
+    if let Err(e) = position_flyout(&win, &work, Some(page), dpi, show_c, mon_count, sdr_count, max_height_percent) {
         tracing::warn!(error = %e, "定位浮窗失败，回退固定尺寸");
-        let _ = apply_fixed_size(&win, Some(page), show_c, mon_count, sdr_count);
+        let _ = apply_fixed_size(&win, Some(page), show_c, mon_count, sdr_count, max_height_percent);
     }
 
     let already = win.is_visible().unwrap_or(false);
@@ -416,6 +419,7 @@ pub fn resize_flyout(
     let mon_count = monitors.len();
     let sdr_count = monitors.iter().filter(|m| m.sdr_controllable).count();
     let show_contrast = state.config.read().show_contrast && mon_count <= 1;
+    let max_height_percent = state.config.read().flyout_max_height_percent;
     crate::window::positioning::set_flyout_content_height(
         height, show_contrast, mon_count, sdr_count,
     )?;
@@ -427,7 +431,7 @@ pub fn resize_flyout(
             (crate::platform::primary_work_area(), crate::platform::primary_dpi())
         });
     position_flyout(
-        &win, &work, Some("flyout"), dpi, show_contrast, mon_count, sdr_count,
+        &win, &work, Some("flyout"), dpi, show_contrast, mon_count, sdr_count, max_height_percent,
     )
     .map_err(|e| e.to_string())?;
     let _ = win.set_ignore_cursor_events(false);
@@ -454,6 +458,7 @@ pub struct UpdateConfigPatch {
     pub remember_last_monitor: Option<bool>,
     pub read_brightness_on_start: Option<bool>,
     pub show_contrast: Option<bool>,
+    pub flyout_max_height_percent: Option<u32>,
     pub locale: Option<String>,
     pub osd: Option<OsdSettings>,
     pub ui: Option<UiSettings>,
@@ -506,6 +511,9 @@ pub fn update_config(
         }
         if let Some(v) = patch.show_contrast {
             cfg.show_contrast = v;
+        }
+        if let Some(v) = patch.flyout_max_height_percent {
+            cfg.flyout_max_height_percent = v;
         }
         if let Some(v) = patch.locale {
             cfg.locale = v;
@@ -712,8 +720,11 @@ pub fn reset_settings(app: AppHandle, state: State<AppState>) -> Result<AppConfi
     let mut cfg = AppConfig::default();
     // 保留缓存亮度? 规范：重置所有设置
     cfg.validate_mut();
-    save_config(&cfg).map_err(|e| e.user_message())?;
-    *state.config.write() = cfg.clone();
+    {
+        let mut current = state.config.write();
+        save_config(&cfg).map_err(|e| e.user_message())?;
+        *current = cfg.clone();
+    }
     let _ = state.hotkeys.register_all(&app, &cfg.hotkeys);
     let _ = app.emit(events::EVT_SETTINGS_CHANGED, &cfg);
     Ok(cfg)

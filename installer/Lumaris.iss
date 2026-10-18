@@ -8,7 +8,7 @@
 
 #define MyAppName "Lumaris"
 #ifndef MyAppVersion
-  #define MyAppVersion "1.1.1"
+  #define MyAppVersion "1.1.2"
 #endif
 #define MyAppPublisher "Lumaris"
 #define MyAppURL "https://github.com/Elnyxn/Lumaris"

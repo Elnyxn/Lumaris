@@ -11,7 +11,7 @@ import {
   updateMonitorContrast,
   updateMonitorSdrBrightness,
 } from "./state/store";
-import type { PageId } from "./state/types";
+import type { BrightnessPresetMode, PageId } from "./state/types";
 import { FlyoutView } from "./ui/flyout";
 import { SettingsView } from "./ui/settings";
 import { renderToast } from "./ui/toast";
@@ -107,6 +107,7 @@ export class App {
         this.resetHideTimer();
       },
       onSettings: () => void this.openPage("settings"),
+      onApplyBrightnessPreset: (mode) => this.applyBrightnessPreset(mode),
       onSelect: (id) => {
         void cmd.selectMonitor(id).then(() => cmd.getMonitors().then(setMonitors));
       },
@@ -120,6 +121,19 @@ export class App {
 
     this.settings = new SettingsView({
       onBack: () => void this.openPage("flyout"),
+      onSaveBrightnessPreset: async (mode) => {
+        try {
+          const cfg = await cmd.saveBrightnessPreset(mode);
+          this.withSuppressedRender(() => patch({ config: cfg }));
+          if (getState().page === "settings") this.renderSettingsPreservingScroll();
+          else this.render();
+          this.lastRenderKey = this.renderKey();
+          showToast(t("preset.saved", { mode: t(`preset.${mode}`) }));
+        } catch (e) {
+          showToast(e instanceof Error ? e.message : String(e));
+        }
+      },
+      onApplyBrightnessPreset: (mode) => this.applyBrightnessPreset(mode),
       onPatchConfig: async (p) => {
         const prevShowContrast = getState().config?.showContrast === true;
         const prevLocale = getState().config?.locale;
@@ -308,9 +322,13 @@ export class App {
     );
     this.unsubs.push(
       await ev.onSettingsChanged((c) => {
+        const previousKey = this.renderKey();
         // 设置页调整中：只同步 store，不触发整页重绘
         this.withSuppressedRender(() => patch({ config: c }));
         this.applyUiTokens();
+        if (getState().page === "flyout" && previousKey !== this.renderKey()) {
+          this.render();
+        }
         this.lastRenderKey = this.renderKey();
       }),
     );
@@ -422,14 +440,26 @@ export class App {
 
   private renderKey(): string {
     const st = getState();
-    // 设置项不进 key，避免改步长/开关触发重绘；locale 进 key 以便切语言
+    // 只纳入影响内容、按钮可用状态或浮窗高度的设置。
     const mids = st.monitors
       .map(
         (m) =>
           `${m.id}:${m.isSelected}:${m.status}:${m.userAlias ?? ""}:${m.isControllable}:${m.sdrControllable}:${m.isPrimary}:${m.dpi}:${JSON.stringify(m.workArea)}`,
       )
       .join("|");
-    return `${st.page}|loc:${st.config?.locale ?? "zh-CN"}|${st.config?.layoutMode}|${st.config?.showContrast}|${mids}`;
+    return `${st.page}|loc:${st.config?.locale ?? "zh-CN"}|${st.config?.layoutMode}|${st.config?.showContrast}|${st.config?.flyoutMaxHeightPercent ?? 50}|${JSON.stringify(st.config?.brightnessPresets ?? {})}|${mids}`;
+  }
+
+  private async applyBrightnessPreset(mode: BrightnessPresetMode): Promise<void> {
+    this.clearHideTimer();
+    try {
+      // 返回值仅代表排队；硬件失败由 operation-result 事件反馈。
+      await cmd.applyBrightnessPreset(mode);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : String(e));
+    } finally {
+      this.resetHideTimer();
+    }
   }
 
   private render(): void {
@@ -462,7 +492,11 @@ export class App {
       const height = this.flyout.naturalHeight();
       if (height <= 0) return;
       const primary = getState().monitors.find((m) => m.isPrimary);
-      const key = JSON.stringify([height, primary?.dpi, primary?.workArea]);
+      const cfg = getState().config;
+      const key = JSON.stringify([
+        height, primary?.dpi, primary?.workArea,
+        cfg?.flyoutMaxHeightPercent ?? 50, cfg?.brightnessPresets,
+      ]);
       if (key === this.lastFlyoutSizeKey) return;
       this.lastFlyoutSizeKey = key;
       void cmd.resizeFlyout(height).catch((error) => {
