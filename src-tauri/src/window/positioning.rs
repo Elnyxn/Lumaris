@@ -79,7 +79,8 @@ fn constrained_height(height: f64, work: &WorkArea, dpi: u32, settings: bool) ->
     } else {
         (available * 0.5).floor().max(1.0)
     };
-    height.min(max_physical / scale)
+    // 内容先向上取整到物理像素，再限高，避免分数 DPI 少一截而出现假滚动条。
+    (height * scale).ceil().min(max_physical) / scale
 }
 
 pub fn size_for_page(
@@ -219,5 +220,21 @@ mod tests {
         let h = constrained_height(2000.0, &work, 144, false);
         assert_eq!((h * 1.5).round() as u32, 700);
         assert_eq!(constrained_height(300.0, &work, 0, false), 300.0);
+    }
+
+    #[test]
+    fn fractional_dpi_rounds_content_up_before_applying_the_cap() {
+        let work = WorkArea {
+            left: 0,
+            top: 0,
+            right: 2560,
+            bottom: 1401,
+        };
+        let scale = dpi_scale(130);
+        let content = constrained_height(235.0, &work, 130, false);
+        assert_eq!((content * scale).round() as u32, 319);
+        assert!(content >= 235.0);
+        let capped = constrained_height(2000.0, &work, 130, false);
+        assert_eq!((capped * scale).round() as u32, 700);
     }
 }
